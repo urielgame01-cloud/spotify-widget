@@ -372,6 +372,13 @@
 
       if (res.status === 204){ renderIdle(); return; }
       if (res.status === 401){ showLoginScreen('Tu sesión expiró. Conéctate de nuevo.'); return; }
+      if (res.status === 429){
+        const retryAfter = parseInt(res.headers.get('Retry-After') || '10', 10);
+        if (pollTimer) clearInterval(pollTimer);
+        els.statusText.textContent = 'Esperando a Spotify...';
+        setTimeout(() => { startPolling(); }, (retryAfter + 1) * 1000);
+        return;
+      }
       if (!res.ok){ renderIdle(); return; }
 
       const data = await res.json();
@@ -385,7 +392,7 @@
   function startPolling(){
     fetchNowPlaying();
     if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(fetchNowPlaying, 5000);
+    pollTimer = setInterval(fetchNowPlaying, 8000);
     if (localProgressTimer) clearInterval(localProgressTimer);
     localProgressTimer = setInterval(updateProgressUI, 500);
   }

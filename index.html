@@ -392,7 +392,7 @@
   function startPolling(){
     fetchNowPlaying();
     if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(fetchNowPlaying, 8000);
+    pollTimer = setInterval(fetchNowPlaying, 15000);
     if (localProgressTimer) clearInterval(localProgressTimer);
     localProgressTimer = setInterval(updateProgressUI, 500);
   }

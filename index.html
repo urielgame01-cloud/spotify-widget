@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Now Playing — Spotify Widget</title>
+<style>
+  :root{
+    --bg-deep: #0b0710;
+    --bg-card: #15101e;
+    --accent: #b48ad2;
+    --accent-2: #6d4f8c;
+    --text-hi: #f3eef8;
+    --text-lo: #a89bb8;
+    --line: rgba(255,255,255,0.08);
+    --good: #57e08a;
+    --warn: #e0576b;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; min-height:100vh;
+    background: radial-gradient(circle at 20% 0%, #2a1c3d 0%, var(--bg-deep) 55%);
+    color: var(--text-hi);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .wrap{ width:100%; max-width:440px; padding: 28px 18px; }
+
+  /* ---- Setup / login screen ---- */
+  .setup{
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 28px 24px;
+  }
+  .setup h1{
+    font-size: 1.05rem; letter-spacing:.04em; text-transform:uppercase;
+    margin:0 0 4px; color: var(--text-hi);
+  }
+  .setup p{ color: var(--text-lo); font-size:.85rem; line-height:1.5; margin: 0 0 18px; }
+  label{ display:block; font-size:.75rem; color:var(--text-lo); margin-bottom:6px; }
+  input[type=text]{
+    width:100%; padding:11px 13px; border-radius:10px;
+    border:1px solid var(--line); background:#0f0a17; color:var(--text-hi);
+    font-size:.9rem; margin-bottom:14px; outline:none;
+  }
+  input[type=text]:focus{ border-color: var(--accent); }
+  .redirect-box{
+    background:#0f0a17; border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; font-size:.78rem; color:var(--accent);
+    word-break:break-all; margin-bottom:16px; user-select:all;
+  }
+  button{
+    width:100%; padding:12px; border:none; border-radius:999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color:#fff; font-weight:600; font-size:.92rem; cursor:pointer;
+    transition: transform .15s ease, opacity .15s ease;
+  }
+  button:hover{ transform: translateY(-1px); opacity:.92; }
+  button:disabled{ opacity:.5; cursor:not-allowed; }
+  .hint{ font-size:.72rem; color:var(--text-lo); margin-top:14px; line-height:1.5; }
+  .hint b{ color: var(--text-hi); }
+  .err{ color: var(--warn); font-size:.8rem; margin-top:10px; }
+
+  /* ---- Now playing card ---- */
+  .card{
+    display:none;
+    background: linear-gradient(135deg, #3a2950, #211530 60%);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 16px;
+    align-items:center;
+    gap: 16px;
+  }
+  .card.show{ display:flex; }
+  .art{
+    width:64px; height:64px; border-radius:12px; object-fit:cover;
+    background:#2a1c3d; flex-shrink:0;
+    box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  }
+  .meta{ flex:1; min-width:0; }
+  .brand{
+    font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
+    color: var(--text-lo); margin-bottom:2px; display:flex; align-items:center; gap:6px;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--good); display:inline-block; }
+  .dot.paused{ background: var(--text-lo); }
+  .track{ font-size:1.0rem; font-weight:700; color:var(--text-hi); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .artist{ font-size:.82rem; color:var(--text-lo); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; }
+  .progress-row{ display:flex; align-items:center; gap:8px; }
+  .time{ font-size:.68rem; color:var(--text-lo); min-width:32px; }
+  .time.right{ text-align:right; }
+  .bar{ flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,.15); position:relative; overflow:hidden; }
+  .bar-fill{ position:absolute; left:0; top:0; height:100%; background:#fff; border-radius:2px; width:0%; transition: width .3s linear; }
+
+  .idle-card{
+    display:none;
+    background: var(--bg-card); border:1px solid var(--line); border-radius:20px;
+    padding: 24px; text-align:center; color: var(--text-lo); font-size:.85rem;
+  }
+  .idle-card.show{ display:block; }
+
+  .footer-link{ text-align:center; margin-top:14px; }
+  .footer-link a{ color: var(--text-lo); font-size:.72rem; text-decoration:none; }
+  .footer-link a:hover{ color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- SETUP / LOGIN -->
+  <div class="setup" id="setupScreen">
+    <h1>Spotify Now Playing</h1>
+    <p>Conecta tu cuenta de Spotify para mostrar lo que estás escuchando en tiempo real. Solo necesitas el <b>Client ID</b> de tu app en el <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:var(--accent)">Dashboard de Spotify</a>.</p>
+
+    <label for="clientId">Client ID</label>
+    <input type="text" id="clientId" placeholder="Pega aquí tu Client ID" />
+
+    <label>Redirect URI (cópiala y pégala en tu app de Spotify, en "Redirect URIs")</label>
+    <div class="redirect-box" id="redirectBox"></div>
+
+    <button id="loginBtn">Conectar con Spotify</button>
+    <div class="err" id="errBox" style="display:none;"></div>
+
+    <div class="hint">
+      <b>Pasos rápidos:</b><br>
+      1. Pega tu Client ID arriba.<br>
+      2. Copia la Redirect URI de la caja gris.<br>
+      3. En tu Dashboard de Spotify → tu app → Settings → agrega esa URL exacta en "Redirect URIs" y guarda.<br>
+      4. Vuelve aquí y presiona "Conectar con Spotify".
+    </div>
+  </div>
+
+  <!-- NOW PLAYING CARD -->
+  <div class="card" id="nowPlayingCard">
+    <img class="art" id="art" src="" alt="" />
+    <div class="meta">
+      <div class="brand"><span class="dot" id="statusDot"></span><span id="statusText">Spotify</span></div>
+      <div class="track" id="trackName">—</div>
+      <div class="artist" id="artistName">—</div>
+      <div class="progress-row">
+        <span class="time" id="timeCurrent">0:00</span>
+        <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+        <span class="time right" id="timeTotal">0:00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="idle-card" id="idleCard">
+    No hay nada reproduciéndose ahora mismo. Abre Spotify y pon una canción ▶
+  </div>
+
+  <div class="footer-link" id="logoutWrap" style="display:none;">
+    <a href="#" id="logoutLink">Desconectar</a>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SCOPE = "user-read-currently-playing user-read-playback-state";
+  const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+  const els = {
+    setupScreen: document.getElementById('setupScreen'),
+    clientId: document.getElementById('clientId'),
+    redirectBox: document.getElementById('redirectBox'),
+    loginBtn: document.getElementById('loginBtn'),
+    errBox: document.getElementById('errBox'),
+    card: document.getElementById('nowPlayingCard'),
+    idleCard: document.getElementById('idleCard'),
+    art: document.getElementById('art'),
+    trackName: document.getElementById('trackName'),
+    artistName: document.getElementById('artistName'),
+    timeCurrent: document.getElementById('timeCurrent'),
+    timeTotal: document.getElementById('timeTotal'),
+    barFill: document.getElementById('barFill'),
+    statusDot: document.getElementById('statusDot'),
+    statusText: document.getElementById('statusText'),
+    logoutWrap: document.getElementById('logoutWrap'),
+    logoutLink: document.getElementById('logoutLink'),
+  };
+
+  els.redirectBox.textContent = REDIRECT_URI;
+
+  function showError(msg){
+    els.errBox.style.display = 'block';
+    els.errBox.textContent = msg;
+  }
+
+  // ---------- PKCE helpers ----------
+  function randomString(len){
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    const values = crypto.getRandomValues(new Uint8Array(len));
+    for (let i = 0; i < len; i++) result += chars[values[i] % chars.length];
+    return result;
+  }
+
+  async function sha256(plain){
+    const data = new TextEncoder().encode(plain);
+    return crypto.subtle.digest('SHA-256', data);
+  }
+
+  function base64UrlEncode(arrayBuffer){
+    let str = '';
+    const bytes = new Uint8Array(arrayBuffer);
+    for (let i = 0; i < bytes.byteLength; i++) str += String.fromCharCode(bytes[i]);
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async function generateCodeChallenge(verifier){
+    const hashed = await sha256(verifier);
+    return base64UrlEncode(hashed);
+  }
+
+  // ---------- Token storage ----------
+  function saveTokens(data){
+    const expiresAt = Date.now() + (data.expires_in * 1000);
+    localStorage.setItem('sp_access_token', data.access_token);
+    localStorage.setItem('sp_refresh_token', data.refresh_token || localStorage.getItem('sp_refresh_token') || '');
+    localStorage.setItem('sp_expires_at', String(expiresAt));
+  }
+
+  function getAccessToken(){ return localStorage.getItem('sp_access_token'); }
+  function getRefreshToken(){ return localStorage.getItem('sp_refresh_token'); }
+  function getExpiresAt(){ return Number(localStorage.getItem('sp_expires_at') || 0); }
+  function getClientId(){ return localStorage.getItem('sp_client_id'); }
+
+  function clearSession(){
+    ['sp_access_token','sp_refresh_token','sp_expires_at','sp_client_id','sp_code_verifier']
+      .forEach(k => localStorage.removeItem(k));
+  }
+
+  // ---------- Auth flow ----------
+  async function startLogin(){
+    const clientId = els.clientId.value.trim();
+    if (!clientId){ showError('Pega tu Client ID primero.'); return; }
+    localStorage.setItem('sp_client_id', clientId);
+
+    const verifier = randomString(64);
+    localStorage.setItem('sp_code_verifier', verifier);
+    const challenge = await generateCodeChallenge(verifier);
+
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      scope: SCOPE,
+      code_challenge_method: 'S256',
+      code_challenge: challenge,
+      redirect_uri: REDIRECT_URI,
+    });
+
+    window.location.href = 'https://accounts.spotify.com/authorize?' + params.toString();
+  }
+
+  async function exchangeCodeForToken(code){
+    const clientId = getClientId();
+    const verifier = localStorage.getItem('sp_code_verifier');
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: REDIRECT_URI,
+      client_id: clientId,
+      code_verifier: verifier,
+    });
+
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    if (!res.ok) throw new Error('No se pudo intercambiar el código por un token.');
+    const data = await res.json();
+    saveTokens(data);
+  }
+
+  async function refreshAccessToken(){
+    const clientId = getClientId();
+    const refreshToken = getRefreshToken();
+    if (!refreshToken || !clientId) return false;
+
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: clientId,
+    });
+
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    saveTokens(data);
+    return true;
+  }
+
+  async function ensureValidToken(){
+    if (Date.now() < getExpiresAt() - 5000) return getAccessToken();
+    const ok = await refreshAccessToken();
+    return ok ? getAccessToken() : null;
+  }
+
+  // ---------- Now playing ----------
+  let pollTimer = null;
+  let localProgressTimer = null;
+  let currentState = null; // { progress_ms, duration_ms, is_playing, fetchedAt }
+
+  function formatTime(ms){
+    if (ms == null || isNaN(ms)) return '0:00';
+    const totalSec = Math.floor(ms / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return min + ':' + String(sec).padStart(2, '0');
+  }
+
+  function renderIdle(){
+    els.card.classList.remove('show');
+    els.idleCard.classList.add('show');
+  }
+
+  function renderTrack(data){
+    els.idleCard.classList.remove('show');
+    els.card.classList.add('show');
+
+    const item = data.item;
+    const images = item.album && item.album.images || [];
+    const img = images[0] ? images[0].url : '';
+    els.art.src = img;
+    els.art.alt = item.name;
+    els.trackName.textContent = item.name;
+    els.artistName.textContent = item.artists.map(a => a.name).join(', ');
+
+    els.statusDot.classList.toggle('paused', !data.is_playing);
+    els.statusText.textContent = data.is_playing ? 'Reproduciendo' : 'En pausa';
+
+    currentState = {
+      progress_ms: data.progress_ms,
+      duration_ms: item.duration_ms,
+      is_playing: data.is_playing,
+      fetchedAt: Date.now(),
+    };
+    updateProgressUI();
+  }
+
+  function updateProgressUI(){
+    if (!currentState) return;
+    let elapsed = currentState.progress_ms;
+    if (currentState.is_playing){
+      elapsed += (Date.now() - currentState.fetchedAt);
+    }
+    elapsed = Math.min(elapsed, currentState.duration_ms);
+
+    const pct = currentState.duration_ms ? (elapsed / currentState.duration_ms) * 100 : 0;
+    els.barFill.style.width = pct + '%';
+    els.timeCurrent.textContent = formatTime(elapsed);
+    els.timeTotal.textContent = formatTime(currentState.duration_ms);
+  }
+
+  async function fetchNowPlaying(){
+    const token = await ensureValidToken();
+    if (!token){ showLoginScreen('Tu sesión expiró. Conéctate de nuevo.'); return; }
+
+    try {
+      const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+        headers: { Authorization: 'Bearer ' + token },
+      });
+
+      if (res.status === 204){ renderIdle(); return; }
+      if (res.status === 401){ showLoginScreen('Tu sesión expiró. Conéctate de nuevo.'); return; }
+      if (!res.ok){ renderIdle(); return; }
+
+      const data = await res.json();
+      if (!data || !data.item){ renderIdle(); return; }
+      renderTrack(data);
+    } catch (e){
+      renderIdle();
+    }
+  }
+
+  function startPolling(){
+    fetchNowPlaying();
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(fetchNowPlaying, 5000);
+    if (localProgressTimer) clearInterval(localProgressTimer);
+    localProgressTimer = setInterval(updateProgressUI, 500);
+  }
+
+  // ---------- Screen switching ----------
+  function showLoginScreen(errMsg){
+    if (pollTimer) clearInterval(pollTimer);
+    if (localProgressTimer) clearInterval(localProgressTimer);
+    els.card.classList.remove('show');
+    els.idleCard.classList.remove('show');
+    els.logoutWrap.style.display = 'none';
+    els.setupScreen.style.display = 'block';
+    const savedId = getClientId();
+    if (savedId) els.clientId.value = savedId;
+    if (errMsg) showError(errMsg);
+  }
+
+  function showPlayerScreen(){
+    els.setupScreen.style.display = 'none';
+    els.logoutWrap.style.display = 'block';
+    startPolling();
+  }
+
+  // ---------- Init ----------
+  async function init(){
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const errParam = urlParams.get('error');
+
+    if (errParam){
+      showLoginScreen('Spotify denegó el acceso: ' + errParam);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (code){
+      try {
+        await exchangeCodeForToken(code);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showPlayerScreen();
+      } catch (e){
+        showLoginScreen('Error al conectar: ' + e.message);
+      }
+      return;
+    }
+
+    const token = getAccessToken();
+    if (token && Date.now() < getExpiresAt() + 1000 * 60 * 60 * 24 * 30){
+      // we have some token state (even if expired, refresh will handle it)
+      const valid = await ensureValidToken();
+      if (valid){ showPlayerScreen(); return; }
+    }
+
+    showLoginScreen();
+  }
+
+  els.loginBtn.addEventListener('click', startLogin);
+  els.logoutLink.addEventListener('click', function(e){
+    e.preventDefault();
+    clearSession();
+    showLoginScreen();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

@@ -6,165 +6,211 @@
 <title>Now Playing — Spotify Widget</title>
 <style>
   :root{
-    --bg-deep: #0b0710;
-    --bg-card: #15101e;
     --accent: #b48ad2;
     --accent-2: #6d4f8c;
     --text-hi: #f3eef8;
     --text-lo: #a89bb8;
     --line: rgba(255,255,255,0.08);
-    --good: #57e08a;
     --warn: #e0576b;
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box;margin:0;padding:0;}
   html,body{
-    margin:0; padding:0; min-height:100vh;
-    background: radial-gradient(circle at 20% 0%, #2a1c3d 0%, var(--bg-deep) 55%);
-    color: var(--text-hi);
-    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    display:flex; align-items:center; justify-content:center;
+    background:transparent;
+    color:var(--text-hi);
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
+    width:1200px;height:350px;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
   }
-  .wrap{ width:100%; max-width:440px; padding: 28px 18px; }
+  .wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:0 40px;}
 
-  /* ---- Setup / login screen ---asdad- */
+  /* ---- Setup ---- */
   .setup{
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 28px 24px;
+    background:rgba(15,10,23,0.95);border:1px solid var(--line);
+    border-radius:18px;padding:28px 24px;max-width:480px;width:100%;
   }
-  .setup h1{
-    font-size: 1.05rem; letter-spacing:.04em; text-transform:uppercase;
-    margin:0 0 4px; color: var(--text-hi);
-  }
-  .setup p{ color: var(--text-lo); font-size:.85rem; line-height:1.5; margin: 0 0 18px; }
-  label{ display:block; font-size:.75rem; color:var(--text-lo); margin-bottom:6px; }
+  .setup h1{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;margin:0 0 4px;}
+  .setup p{color:var(--text-lo);font-size:.85rem;line-height:1.5;margin:0 0 18px;}
+  label{display:block;font-size:.75rem;color:var(--text-lo);margin-bottom:6px;}
   input[type=text]{
-    width:100%; padding:11px 13px; border-radius:10px;
-    border:1px solid var(--line); background:#0f0a17; color:var(--text-hi);
-    font-size:.9rem; margin-bottom:14px; outline:none;
+    width:100%;padding:11px 13px;border-radius:10px;
+    border:1px solid var(--line);background:#0f0a17;color:var(--text-hi);
+    font-size:.9rem;margin-bottom:14px;outline:none;
   }
-  input[type=text]:focus{ border-color: var(--accent); }
+  input[type=text]:focus{border-color:var(--accent);}
   .redirect-box{
-    background:#0f0a17; border:1px solid var(--line); border-radius:10px;
-    padding:10px 12px; font-size:.78rem; color:var(--accent);
-    word-break:break-all; margin-bottom:16px; user-select:all;
+    background:#0f0a17;border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-size:.78rem;color:var(--accent);
+    word-break:break-all;margin-bottom:16px;user-select:all;
   }
   button{
-    width:100%; padding:12px; border:none; border-radius:999px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color:#fff; font-weight:600; font-size:.92rem; cursor:pointer;
-    transition: transform .15s ease, opacity .15s ease;
+    width:100%;padding:12px;border:none;border-radius:999px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#fff;font-weight:600;font-size:.92rem;cursor:pointer;
+    transition:transform .15s,opacity .15s;
   }
-  button:hover{ transform: translateY(-1px); opacity:.92; }
-  button:disabled{ opacity:.5; cursor:not-allowed; }
-  .hint{ font-size:.72rem; color:var(--text-lo); margin-top:14px; line-height:1.5; }
-  .hint b{ color: var(--text-hi); }
-  .err{ color: var(--warn); font-size:.8rem; margin-top:10px; }
+  button:hover{transform:translateY(-1px);opacity:.92;}
+  .hint{font-size:.72rem;color:var(--text-lo);margin-top:14px;line-height:1.5;}
+  .hint b{color:var(--text-hi);}
+  .err{color:var(--warn);font-size:.8rem;margin-top:10px;}
 
-  /* ---- Now playing card ---- */
+  /* ---- Now playing ---- */
   .card{
     display:none;
-    background: linear-gradient(135deg, #3a2950, #211530 60%);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 16px;
     align-items:center;
-    gap: 16px;
+    gap:40px;
+    width:100%;height:100%;
+    padding:36px 44px;
   }
-  .card.show{ display:flex; }
+  .card.show{display:flex;}
+
   .art{
-    width:64px; height:64px; border-radius:12px; object-fit:cover;
-    background:#2a1c3d; flex-shrink:0;
-    box-shadow: 0 6px 16px rgba(0,0,0,.35);
+    width:220px;height:220px;border-radius:18px;object-fit:cover;
+    flex-shrink:0;background:#1a0d2b;
+    box-shadow:0 16px 48px rgba(0,0,0,0.55);
+    transition:box-shadow 2s ease;
   }
-  .meta{ flex:1; min-width:0; }
-  .brand{
-    font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
-    color: var(--text-lo); margin-bottom:2px; display:flex; align-items:center; gap:6px;
+
+  .meta{flex:1;min-width:0;}
+
+  .track{
+    font-size:2.3rem;font-weight:700;line-height:1.1;margin-bottom:10px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:inline-block;width:100%;
+    background:linear-gradient(90deg,#f5c06a,#e8885a,#d4607a,#e8885a,#f5c06a);
+    background-size:400% auto;
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    animation:driftTrack 12s ease-in-out infinite, breatheTrack 6s ease-in-out infinite;
+    transition:background 2s ease;
   }
-  .dot{ width:6px; height:6px; border-radius:50%; background:var(--good); display:inline-block; }
-  .dot.paused{ background: var(--text-lo); }
-  .track{ font-size:1.0rem; font-weight:700; color:var(--text-hi); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .artist{ font-size:.82rem; color:var(--text-lo); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; }
-  .progress-row{ display:flex; align-items:center; gap:8px; }
-  .time{ font-size:.68rem; color:var(--text-lo); min-width:32px; }
-  .time.right{ text-align:right; }
-  .bar{ flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,.15); position:relative; overflow:hidden; }
-  .bar-fill{ position:absolute; left:0; top:0; height:100%; background:#fff; border-radius:2px; width:0%; transition: width .3s linear; }
+  @keyframes driftTrack{0%{background-position:0% center;}50%{background-position:200% center;}100%{background-position:400% center;}}
+  @keyframes breatheTrack{0%,100%{transform:scale(1);opacity:0.9;}50%{transform:scale(1.012);opacity:1;}}
+
+  .artist{
+    font-size:1.15rem;font-weight:400;margin-bottom:32px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:inline-block;width:100%;
+    background:linear-gradient(90deg,#e8c99a,#c9a87c,#ddb896,#e8c99a);
+    background-size:350% auto;
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    animation:driftArtist 16s ease-in-out infinite, breatheArtist 8s ease-in-out infinite;
+    transition:background 2s ease;
+  }
+  @keyframes driftArtist{0%{background-position:0% center;}50%{background-position:175% center;}100%{background-position:350% center;}}
+  @keyframes breatheArtist{0%,100%{opacity:0.65;letter-spacing:0em;}50%{opacity:1;letter-spacing:0.02em;}}
+
+  /* Progress bar — center fill, no dot */
+  .bar-outer{
+    width:75%;height:3px;border-radius:2px;
+    background:rgba(255,255,255,0.08);
+    position:relative;overflow:hidden;
+  }
+  .bar-l{
+    position:absolute;right:50%;top:0;height:100%;width:0%;
+    border-radius:2px 0 0 2px;
+    background:linear-gradient(90deg,#c9905a,#e8c49a);
+    transition:background 2s ease;
+  }
+  .bar-r{
+    position:absolute;left:50%;top:0;height:100%;width:0%;
+    border-radius:0 2px 2px 0;
+    background:linear-gradient(90deg,#e8c49a,#c9905a);
+    transition:background 2s ease;
+  }
 
   .idle-card{
-    display:none;
-    background: var(--bg-card); border:1px solid var(--line); border-radius:20px;
-    padding: 24px; text-align:center; color: var(--text-lo); font-size:.85rem;
+    display:none;align-items:center;justify-content:center;
+    width:100%;height:100%;
+    color:var(--text-lo);font-size:1rem;
   }
-  .idle-card.show{ display:block; }
+  .idle-card.show{display:flex;}
 
-  .footer-link{ text-align:center; margin-top:14px; }
-  .footer-link a{ color: var(--text-lo); font-size:.72rem; text-decoration:none; }
-  .footer-link a:hover{ color: var(--accent); }
+  .logout{position:fixed;bottom:10px;right:14px;}
+  .logout a{color:rgba(255,255,255,0.15);font-size:.68rem;text-decoration:none;}
+  .logout a:hover{color:var(--text-lo);}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- SETUP / LOGIN -->
+  <!-- SETUP -->
   <div class="setup" id="setupScreen">
     <h1>Spotify Now Playing</h1>
-    <p>Conecta tu cuenta de Spotify para mostrar lo que estás escuchando en tiempo real. Solo necesitas el <b>Client ID</b> de tu app en el <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:var(--accent)">Dashboard de Spotify</a>.</p>
-
+    <p>Conecta tu cuenta de Spotify. Solo necesitas el <b>Client ID</b> de tu app en el <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:var(--accent)">Dashboard de Spotify</a>.</p>
     <label for="clientId">Client ID</label>
     <input type="text" id="clientId" placeholder="Pega aquí tu Client ID" />
-
-    <label>Redirect URI (cópiala y pégala en tu app de Spotify, en "Redirect URIs")</label>
+    <label>Redirect URI — agrégala en tu app de Spotify en "Redirect URIs"</label>
     <div class="redirect-box" id="redirectBox"></div>
-
     <button id="loginBtn">Conectar con Spotify</button>
     <div class="err" id="errBox" style="display:none;"></div>
-
-    <div class="hint">
-      <b>Pasos rápidos:</b><br>
-      1. Pega tu Client ID arriba.<br>
-      2. Copia la Redirect URI de la caja gris.<br>
-      3. En tu Dashboard de Spotify → tu app → Settings → agrega esa URL exacta en "Redirect URIs" y guarda.<br>
-      4. Vuelve aquí y presiona "Conectar con Spotify".
-    </div>
+    <div class="hint"><b>Pasos:</b> 1. Pega tu Client ID · 2. Copia la Redirect URI y agrégala en el Dashboard (Settings → Redirect URIs → Save) · 3. Conectar con Spotify.</div>
   </div>
 
-  <!-- NOW PLAYING CARD -->
+  <!-- NOW PLAYING -->
   <div class="card" id="nowPlayingCard">
     <img class="art" id="art" src="" alt="" />
     <div class="meta">
-      <div class="brand"><span class="dot" id="statusDot"></span><span id="statusText">Spotify</span></div>
       <div class="track" id="trackName">—</div>
       <div class="artist" id="artistName">—</div>
-      <div class="progress-row">
-        <span class="time" id="timeCurrent">0:00</span>
-        <div class="bar"><div class="bar-fill" id="barFill"></div></div>
-        <span class="time right" id="timeTotal">0:00</span>
+      <div class="bar-outer">
+        <div class="bar-l" id="barL"></div>
+        <div class="bar-r" id="barR"></div>
       </div>
     </div>
   </div>
 
   <div class="idle-card" id="idleCard">
-    No hay nada reproduciéndose ahora mismo. Abre Spotify y pon una canción ▶
+    Abre Spotify y pon una canción ▶
   </div>
 
-  <div class="footer-link" id="logoutWrap" style="display:none;">
-    <a href="#" id="logoutLink">Desconectar</a>
-  </div>
+</div>
 
+<div class="logout" id="logoutWrap" style="display:none;">
+  <a href="#" id="logoutLink">Desconectar</a>
 </div>
 
 <script>
 (function(){
   "use strict";
 
+  /* ---- Palettes (warm, elegant, no blue/purple) ---- */
+  const PALETTES = [
+    // Gold / Coral
+    { track: ['#f5c06a','#e8885a','#d4607a','#e8885a','#f5c06a'], artist: ['#e8c99a','#c9a87c','#ddb896','#e8c99a'], barL: ['#c9905a','#e8c49a'], barR: ['#e8c49a','#c9905a'] },
+    // Rose / Champagne
+    { track: ['#f0a0a0','#e87878','#d45060','#e87878','#f0a0a0'], artist: ['#e8c4b8','#d4a090','#c88070','#e8c4b8'], barL: ['#c96060','#e8a0a0'], barR: ['#e8a0a0','#c96060'] },
+    // Amber / Honey
+    { track: ['#f0c060','#e8a040','#d08020','#e8a040','#f0c060'], artist: ['#e8d090','#d0b060','#c0a040','#e8d090'], barL: ['#c09030','#e8c060'], barR: ['#e8c060','#c09030'] },
+    // Sage / Warm Green
+    { track: ['#a8d090','#80b868','#60a050','#80b868','#a8d090'], artist: ['#c8deb8','#a8c898','#90b880','#c8deb8'], barL: ['#60a050','#a8d090'], barR: ['#a8d090','#60a050'] },
+    // Rose Gold
+    { track: ['#f0b898','#e09070','#c87050','#e09070','#f0b898'], artist: ['#e8c8b8','#d0a890','#c09078','#e8c8b8'], barL: ['#c08060','#e0b090'], barR: ['#e0b090','#c08060'] },
+    // Warm Crimson
+    { track: ['#e8807a','#d05050','#b83030','#d05050','#e8807a'], artist: ['#e0a898','#c88878','#b06858','#e0a898'], barL: ['#b04040','#e08080'], barR: ['#e08080','#b04040'] },
+  ];
+
+  function hashTrack(str){
+    let h=0; for(let i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0;
+    return h % PALETTES.length;
+  }
+
+  function applyPalette(trackStr){
+    const p = PALETTES[hashTrack(trackStr)];
+    const t = document.getElementById('trackName');
+    const a = document.getElementById('artistName');
+    const bL = document.getElementById('barL');
+    const bR = document.getElementById('barR');
+    t.style.backgroundImage = 'linear-gradient(90deg,'+p.track.join(',')+')';
+    a.style.backgroundImage = 'linear-gradient(90deg,'+p.artist.join(',')+')';
+    bL.style.backgroundImage = 'linear-gradient(90deg,'+p.barL.join(',')+')';
+    bR.style.backgroundImage = 'linear-gradient(90deg,'+p.barR.join(',')+')';
+  }
+
+  /* ---- Auth / PKCE ---- */
   const SCOPE = "user-read-currently-playing user-read-playback-state";
   const REDIRECT_URI = window.location.origin + window.location.pathname;
 
   const els = {
-    setupScreen: document.getElementById('setupScreen'),
+    setup: document.getElementById('setupScreen'),
     clientId: document.getElementById('clientId'),
     redirectBox: document.getElementById('redirectBox'),
     loginBtn: document.getElementById('loginBtn'),
@@ -174,288 +220,135 @@
     art: document.getElementById('art'),
     trackName: document.getElementById('trackName'),
     artistName: document.getElementById('artistName'),
-    timeCurrent: document.getElementById('timeCurrent'),
-    timeTotal: document.getElementById('timeTotal'),
-    barFill: document.getElementById('barFill'),
-    statusDot: document.getElementById('statusDot'),
-    statusText: document.getElementById('statusText'),
+    barL: document.getElementById('barL'),
+    barR: document.getElementById('barR'),
     logoutWrap: document.getElementById('logoutWrap'),
     logoutLink: document.getElementById('logoutLink'),
   };
 
   els.redirectBox.textContent = REDIRECT_URI;
+  function showErr(m){ els.errBox.style.display='block'; els.errBox.textContent=m; }
 
-  function showError(msg){
-    els.errBox.style.display = 'block';
-    els.errBox.textContent = msg;
-  }
+  function rndStr(n){ const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',v=crypto.getRandomValues(new Uint8Array(n)); return Array.from(v,x=>c[x%c.length]).join(''); }
+  async function sha256(s){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); }
+  function b64u(b){ return btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  async function challenge(v){ return b64u(await sha256(v)); }
 
-  // ---------- PKCE helpers ----------
-  function randomString(len){
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    const values = crypto.getRandomValues(new Uint8Array(len));
-    for (let i = 0; i < len; i++) result += chars[values[i] % chars.length];
-    return result;
-  }
+  const ls = { get:k=>localStorage.getItem(k), set:(k,v)=>localStorage.setItem(k,v), del:k=>localStorage.removeItem(k) };
+  function saveTokens(d){ ls.set('sp_at',d.access_token); ls.set('sp_rt',d.refresh_token||ls.get('sp_rt')||''); ls.set('sp_exp',Date.now()+d.expires_in*1000); }
+  function clearSession(){ ['sp_at','sp_rt','sp_exp','sp_cid','sp_cv'].forEach(k=>ls.del(k)); }
 
-  async function sha256(plain){
-    const data = new TextEncoder().encode(plain);
-    return crypto.subtle.digest('SHA-256', data);
-  }
-
-  function base64UrlEncode(arrayBuffer){
-    let str = '';
-    const bytes = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < bytes.byteLength; i++) str += String.fromCharCode(bytes[i]);
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-
-  async function generateCodeChallenge(verifier){
-    const hashed = await sha256(verifier);
-    return base64UrlEncode(hashed);
-  }
-
-  // ---------- Token storage ----------
-  function saveTokens(data){
-    const expiresAt = Date.now() + (data.expires_in * 1000);
-    localStorage.setItem('sp_access_token', data.access_token);
-    localStorage.setItem('sp_refresh_token', data.refresh_token || localStorage.getItem('sp_refresh_token') || '');
-    localStorage.setItem('sp_expires_at', String(expiresAt));
-  }
-
-  function getAccessToken(){ return localStorage.getItem('sp_access_token'); }
-  function getRefreshToken(){ return localStorage.getItem('sp_refresh_token'); }
-  function getExpiresAt(){ return Number(localStorage.getItem('sp_expires_at') || 0); }
-  function getClientId(){ return localStorage.getItem('sp_client_id'); }
-
-  function clearSession(){
-    ['sp_access_token','sp_refresh_token','sp_expires_at','sp_client_id','sp_code_verifier']
-      .forEach(k => localStorage.removeItem(k));
-  }
-
-  // ---------- Auth flow ----------
   async function startLogin(){
-    const clientId = els.clientId.value.trim();
-    if (!clientId){ showError('Pega tu Client ID primero.'); return; }
-    localStorage.setItem('sp_client_id', clientId);
-
-    const verifier = randomString(64);
-    localStorage.setItem('sp_code_verifier', verifier);
-    const challenge = await generateCodeChallenge(verifier);
-
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id: clientId,
-      scope: SCOPE,
-      code_challenge_method: 'S256',
-      code_challenge: challenge,
-      redirect_uri: REDIRECT_URI,
-    });
-
-    window.location.href = 'https://accounts.spotify.com/authorize?' + params.toString();
+    const id=els.clientId.value.trim(); if(!id){showErr('Pega tu Client ID primero.');return;}
+    ls.set('sp_cid',id);
+    const v=rndStr(64); ls.set('sp_cv',v);
+    const ch=await challenge(v);
+    const p=new URLSearchParams({response_type:'code',client_id:id,scope:SCOPE,code_challenge_method:'S256',code_challenge:ch,redirect_uri:REDIRECT_URI});
+    window.location.href='https://accounts.spotify.com/authorize?'+p;
   }
 
-  async function exchangeCodeForToken(code){
-    const clientId = getClientId();
-    const verifier = localStorage.getItem('sp_code_verifier');
-    const body = new URLSearchParams({
-      grant_type: 'authorization_code',
-      code: code,
-      redirect_uri: REDIRECT_URI,
-      client_id: clientId,
-      code_verifier: verifier,
-    });
-
-    const res = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    });
-    if (!res.ok) throw new Error('No se pudo intercambiar el código por un token.');
-    const data = await res.json();
-    saveTokens(data);
+  async function exchangeCode(code){
+    const body=new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIRECT_URI,client_id:ls.get('sp_cid'),code_verifier:ls.get('sp_cv')});
+    const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString()});
+    if(!r.ok) throw new Error('Error al intercambiar código.');
+    saveTokens(await r.json());
   }
 
-  async function refreshAccessToken(){
-    const clientId = getClientId();
-    const refreshToken = getRefreshToken();
-    if (!refreshToken || !clientId) return false;
-
-    const body = new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-      client_id: clientId,
-    });
-
-    const res = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    saveTokens(data);
-    return true;
+  async function refreshToken(){
+    const body=new URLSearchParams({grant_type:'refresh_token',refresh_token:ls.get('sp_rt'),client_id:ls.get('sp_cid')});
+    const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString()});
+    if(!r.ok) return false; saveTokens(await r.json()); return true;
   }
 
-  async function ensureValidToken(){
-    if (Date.now() < getExpiresAt() - 5000) return getAccessToken();
-    const ok = await refreshAccessToken();
-    return ok ? getAccessToken() : null;
+  async function ensureToken(){
+    if(Date.now()<Number(ls.get('sp_exp'))-5000) return ls.get('sp_at');
+    return (await refreshToken()) ? ls.get('sp_at') : null;
   }
 
-  // ---------- Now playing ----------
-  let pollTimer = null;
-  let localProgressTimer = null;
-  let currentState = null; // { progress_ms, duration_ms, is_playing, fetchedAt }
+  /* ---- Player ---- */
+  let pollTimer=null, progTimer=null, state=null, q429=0, lastTrackId=null;
 
-  function formatTime(ms){
-    if (ms == null || isNaN(ms)) return '0:00';
-    const totalSec = Math.floor(ms / 1000);
-    const min = Math.floor(totalSec / 60);
-    const sec = totalSec % 60;
-    return min + ':' + String(sec).padStart(2, '0');
-  }
-
-  function renderIdle(){
-    els.card.classList.remove('show');
-    els.idleCard.classList.add('show');
-  }
+  function renderIdle(){ els.card.classList.remove('show'); els.idleCard.classList.add('show'); }
 
   function renderTrack(data){
-    els.idleCard.classList.remove('show');
-    els.card.classList.add('show');
+    els.idleCard.classList.remove('show'); els.card.classList.add('show');
+    const item=data.item;
 
-    const item = data.item;
-    const images = item.album && item.album.images || [];
-    const img = images[0] ? images[0].url : '';
-    els.art.src = img;
-    els.art.alt = item.name;
-    els.trackName.textContent = item.name;
-    els.artistName.textContent = item.artists.map(a => a.name).join(', ');
-
-    els.statusDot.classList.toggle('paused', !data.is_playing);
-    els.statusText.textContent = data.is_playing ? 'Reproduciendo' : 'En pausa';
-
-    currentState = {
-      progress_ms: data.progress_ms,
-      duration_ms: item.duration_ms,
-      is_playing: data.is_playing,
-      fetchedAt: Date.now(),
-    };
-    updateProgressUI();
-  }
-
-  function updateProgressUI(){
-    if (!currentState) return;
-    let elapsed = currentState.progress_ms;
-    if (currentState.is_playing){
-      elapsed += (Date.now() - currentState.fetchedAt);
+    /* change palette when track changes */
+    if(item.id !== lastTrackId){
+      lastTrackId = item.id;
+      applyPalette(item.name + item.artists[0].name);
     }
-    elapsed = Math.min(elapsed, currentState.duration_ms);
 
-    const pct = currentState.duration_ms ? (elapsed / currentState.duration_ms) * 100 : 0;
-    els.barFill.style.width = pct + '%';
-    els.timeCurrent.textContent = formatTime(elapsed);
-    els.timeTotal.textContent = formatTime(currentState.duration_ms);
+    const img=(item.album&&item.album.images||[])[0];
+    els.art.src=img?img.url:''; els.art.alt=item.name;
+    els.trackName.textContent=item.name;
+    els.artistName.textContent=item.artists.map(a=>a.name).join(', ');
+    state={progress:data.progress_ms,duration:item.duration_ms,playing:data.is_playing,at:Date.now()};
+    updateBar();
   }
 
-  async function fetchNowPlaying(){
-    const token = await ensureValidToken();
-    if (!token){ showLoginScreen('Tu sesión expiró. Conéctate de nuevo.'); return; }
+  function updateBar(){
+    if(!state) return;
+    let el=state.progress+(state.playing?(Date.now()-state.at):0);
+    el=Math.min(el,state.duration);
+    const half=state.duration?(el/state.duration*50):0;
+    els.barL.style.width=half+'%';
+    els.barR.style.width=half+'%';
+  }
 
-    try {
-      const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-        headers: { Authorization: 'Bearer ' + token },
-      });
-
-      if (res.status === 204){ renderIdle(); return; }
-      if (res.status === 401){ showLoginScreen('Tu sesión expiró. Conéctate de nuevo.'); return; }
-      if (res.status === 429){
-        const retryAfter = parseInt(res.headers.get('Retry-After') || '10', 10);
-        if (pollTimer) clearInterval(pollTimer);
-        els.statusText.textContent = 'Esperando a Spotify...';
-        setTimeout(() => { startPolling(); }, (retryAfter + 1) * 1000);
+  async function fetchNow(){
+    const token=await ensureToken();
+    if(!token){showLogin('Tu sesión expiró. Conéctate de nuevo.');return;}
+    try{
+      const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+token}});
+      if(r.status===204){q429=0;renderIdle();return;}
+      if(r.status===401){showLogin('Tu sesión expiró. Conéctate de nuevo.');return;}
+      if(r.status===429){
+        q429++;
+        const wait=Math.max(parseInt(r.headers.get('Retry-After')||'0',10),Math.min(20*Math.pow(2,q429-1),1800));
+        if(pollTimer) clearInterval(pollTimer);
+        setTimeout(()=>startPolling(),(wait+1)*1000);
         return;
       }
-      if (!res.ok){ renderIdle(); return; }
-
-      const data = await res.json();
-      if (!data || !data.item){ renderIdle(); return; }
+      q429=0; if(!r.ok){renderIdle();return;}
+      const data=await r.json();
+      if(!data||!data.item){renderIdle();return;}
       renderTrack(data);
-    } catch (e){
-      renderIdle();
-    }
+    }catch(e){renderIdle();}
   }
 
   function startPolling(){
-    fetchNowPlaying();
-    if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(fetchNowPlaying, 15000);
-    if (localProgressTimer) clearInterval(localProgressTimer);
-    localProgressTimer = setInterval(updateProgressUI, 500);
+    fetchNow();
+    if(pollTimer) clearInterval(pollTimer); pollTimer=setInterval(fetchNow,1000);
+    if(progTimer) clearInterval(progTimer); progTimer=setInterval(updateBar,500);
   }
 
-  // ---------- Screen switching ----------
-  function showLoginScreen(errMsg){
-    if (pollTimer) clearInterval(pollTimer);
-    if (localProgressTimer) clearInterval(localProgressTimer);
-    els.card.classList.remove('show');
-    els.idleCard.classList.remove('show');
-    els.logoutWrap.style.display = 'none';
-    els.setupScreen.style.display = 'block';
-    const savedId = getClientId();
-    if (savedId) els.clientId.value = savedId;
-    if (errMsg) showError(errMsg);
+  function showLogin(err){
+    if(pollTimer) clearInterval(pollTimer); if(progTimer) clearInterval(progTimer);
+    els.card.classList.remove('show'); els.idleCard.classList.remove('show');
+    els.logoutWrap.style.display='none'; els.setup.style.display='block';
+    const id=ls.get('sp_cid'); if(id) els.clientId.value=id;
+    if(err) showErr(err);
   }
 
-  function showPlayerScreen(){
-    els.setupScreen.style.display = 'none';
-    els.logoutWrap.style.display = 'block';
-    startPolling();
-  }
+  function showPlayer(){ els.setup.style.display='none'; els.logoutWrap.style.display='block'; startPolling(); }
 
-  // ---------- Init ----------
   async function init(){
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const errParam = urlParams.get('error');
-
-    if (errParam){
-      showLoginScreen('Spotify denegó el acceso: ' + errParam);
-      window.history.replaceState({}, document.title, window.location.pathname);
+    const p=new URLSearchParams(window.location.search);
+    const code=p.get('code'),err=p.get('error');
+    if(err){showLogin('Spotify denegó el acceso: '+err);window.history.replaceState({},'',window.location.pathname);return;}
+    if(code){
+      try{await exchangeCode(code);window.history.replaceState({},'',window.location.pathname);showPlayer();}
+      catch(e){showLogin('Error al conectar: '+e.message);}
       return;
     }
-
-    if (code){
-      try {
-        await exchangeCodeForToken(code);
-        window.history.replaceState({}, document.title, window.location.pathname);
-        showPlayerScreen();
-      } catch (e){
-        showLoginScreen('Error al conectar: ' + e.message);
-      }
-      return;
-    }
-
-    const token = getAccessToken();
-    if (token && Date.now() < getExpiresAt() + 1000 * 60 * 60 * 24 * 30){
-      // we have some token state (even if expired, refresh will handle it)
-      const valid = await ensureValidToken();
-      if (valid){ showPlayerScreen(); return; }
-    }
-
-    showLoginScreen();
+    if(ls.get('sp_at')){const t=await ensureToken();if(t){showPlayer();return;}}
+    showLogin();
   }
 
-  els.loginBtn.addEventListener('click', startLogin);
-  els.logoutLink.addEventListener('click', function(e){
-    e.preventDefault();
-    clearSession();
-    showLoginScreen();
-  });
-
+  els.loginBtn.addEventListener('click',startLogin);
+  els.logoutLink.addEventListener('click',e=>{e.preventDefault();clearSession();showLogin();});
   init();
 })();
 </script>

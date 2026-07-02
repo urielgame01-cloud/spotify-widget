@@ -55,43 +55,30 @@ button:hover{transform:translateY(-1px);opacity:.9;}
   z-index:2;
   display:flex;align-items:center;justify-content:center;
 }
-/* the spinning vinyl disk — circle behind the square art */
-.vinyl-disk{
-  position:absolute;
-  width:320px;height:320px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 50%, #3a2255 0%, #1e1030 30%, #110820 60%, #080510 100%);
-  animation:vinylSpin 9s linear infinite;
-  box-shadow:0 0 40px rgba(0,0,0,.6);
-}
-.vinyl-groove{
-  position:absolute;
-  width:320px;height:320px;
-  border-radius:50%;
-  background:repeating-radial-gradient(circle at 50%,transparent 0,transparent 7px,rgba(255,255,255,.03) 7px,rgba(255,255,255,.03) 8px);
-  animation:vinylSpin 9s linear infinite;
-}
-.vinyl-hole{
-  position:absolute;width:16px;height:16px;border-radius:50%;
-  background:#080510;z-index:3;
-}
-@keyframes vinylSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-
-/* the square album art — centered on the vinyl, NOT spinning */
+/* the album art — gira como un vinilo */
 .art-frame{
   position:absolute;
-  width:240px;height:240px;
-  border-radius:16px;
+  width:260px;height:260px;
+  border-radius:50%;
   z-index:4;
   overflow:hidden;
-  box-shadow:0 12px 40px rgba(0,0,0,.65);
+  box-shadow:0 0 0 3px rgba(255,255,255,.06), 0 12px 48px rgba(0,0,0,.7);
+  animation:vinylSpin 9s linear infinite;
 }
+/* counter-rotate the img so the image itself stays upright but frame spins */
+/* we actually WANT the image to spin — it IS the vinyl */
 .art{
   width:100%;height:100%;
   object-fit:cover;
   background:#1a0d2b;
   display:block;
+}
+/* small center hole overlay */
+.vinyl-hole{
+  position:absolute;
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle,#fff2 0%,#0008 100%);
+  z-index:6;pointer-events:none;
 }
 
 /* SVG progress overlay on the art-frame */
@@ -178,12 +165,10 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 
   <!-- VINYL + ART -->
   <div class="vinyl-zone" id="vinylZone">
-    <div class="vinyl-disk" id="vinylDisk"></div>
-    <div class="vinyl-groove"></div>
-    <div class="vinyl-hole"></div>
     <div class="art-frame" id="artFrame">
       <img class="art" id="art" src="" alt=""/>
     </div>
+    <div class="vinyl-hole"></div>
     <svg id="progressSvg"></svg>
   </div>
 
@@ -402,7 +387,7 @@ let pollT=null,progT=null,state=null,q429=0,lastId=null;
 
 function showIdle(){
   stopFx();hideAllBars();if(waveRAF){cancelAnimationFrame(waveRAF);waveRAF=null;}
-  G('vinylDisk').style.animationPlayState='paused';
+  G('artFrame').style.animationPlayState='paused';
   G('nowPlayingCard').classList.remove('show');G('idleCard').classList.add('show');
 }
 
@@ -417,7 +402,7 @@ function showTrack(data){
     startFx(h%10,p.rgb);
     setupBar(h%10,p);
   }
-  G('vinylDisk').style.animationPlayState=data.is_playing?'running':'paused';
+  G('artFrame').style.animationPlayState=data.is_playing?'running':'paused';
   const img=(item.album&&item.album.images||[])[0];
   G('art').src=img?img.url:''; G('art').alt=item.name;
   G('trackName').textContent=item.name;

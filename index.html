@@ -233,25 +233,25 @@ function hideAllBars(){
 }
 
 // art-frame: 240x240 circle. SVG wraps 14px pad = 268x268
-const AF=240, SVG_PAD=14, SZ=AF+SVG_PAD*2; // 268
+const AF=200, SVG_PAD=18, SZ=AF+SVG_PAD*2; // 236
 
 function setupBar(idx, p){
   hideAllBars();
   curVariant=idx;
   const svg=document.getElementById('progressSvg');
-  const R=SZ/2, cr=R-6, circ=+(2*Math.PI*cr).toFixed(1);
+  const R=SZ/2, cr=R-8, circ=+(2*Math.PI*cr).toFixed(1);
   const _vz=320,_off=(_vz-SZ)/2; svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${_off}px;left:${_off}px;z-index:5;pointer-events:none;overflow:visible;`;
   svg.setAttribute('viewBox',`0 0 ${SZ} ${SZ}`);
 
   function mkCirc(dual, glowDot){
     let s=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient>`;
     if(glowDot) s+=`<filter id="gf"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
-    s+=`</defs><circle cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>`;
+    s+=`</defs><circle cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>`;
     if(dual){
-      s+=`<circle id="circA" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c2}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(-90 ${R} ${R})"/>`;
-      s+=`<circle id="circB" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c1}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(90 ${R} ${R})"/>`;
+      s+=`<circle id="circA" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c2}" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(-90 ${R} ${R})"/>`;
+      s+=`<circle id="circB" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c1}" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(90 ${R} ${R})"/>`;
     } else {
-      s+=`<circle id="circP" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" transform="rotate(-90 ${R} ${R})"/>`;
+      s+=`<circle id="circP" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" transform="rotate(-90 ${R} ${R})"/>`;
     }
     if(glowDot) s+=`<circle id="glowDot" cx="${R}" cy="${SVG_PAD}" r="5" fill="${p.c2}" filter="url(#gf)"/>`;
     svg.innerHTML=s;
@@ -295,36 +295,36 @@ function setupBar(idx, p){
     const pts=Array.from({length:6},(_,i)=>{const a=Math.PI/2+i*Math.PI/3;return `${(R+r*Math.cos(a)).toFixed(1)},${(R-r*Math.sin(a)).toFixed(1)}`;}).join(' ');
     const perim=+(6*r*2).toFixed(0);
     svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3" stroke-linejoin="round"/>
-    <polygon id="shProg" points="${pts}" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
+    <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5" stroke-linejoin="round"/>
+    <polygon id="shProg" points="${pts}" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
     svg.dataset.perim=perim;
   } else if(idx===11){
     // cuadrado redondeado
     const perim=1020;
     svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <rect x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <rect id="shProg" x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${SZ/2} ${SZ/2})"/>`;
+    <rect x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>
+    <rect id="shProg" x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${SZ/2} ${SZ/2})"/>`;
     svg.dataset.perim=perim;
   } else if(idx===12){
     // rombo redondeado
     const R=SZ/2,perim=760;
     svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <path d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <path id="shProg" d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
+    <path d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>
+    <path id="shProg" d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
     svg.dataset.perim=perim;
   } else if(idx===13){
     // arco / media D
     const R=SZ/2,perim=930;
     svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <path d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3" stroke-linejoin="round"/>
-    <path id="shProg" d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
+    <path d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5" stroke-linejoin="round"/>
+    <path id="shProg" d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
     svg.dataset.perim=perim;
   } else if(idx===14){
     // ovalo vertical
     const R=SZ/2,rx=R-8,ry=R-4,perim=780;
     svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <ellipse cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <ellipse id="shProg" cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${R} ${R})"/>`;
+    <ellipse cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>
+    <ellipse id="shProg" cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${R} ${R})"/>`;
     svg.dataset.perim=perim;
   }
   updateBar();
@@ -333,7 +333,7 @@ function setupBar(idx, p){
 function updateBar(){
   const pct=progressPct;
   const svg=document.getElementById('progressSvg');
-  const R=SZ/2, cr=R-6, circ=2*Math.PI*cr;
+  const R=SZ/2, cr=R-8, circ=2*Math.PI*cr;
   if(curVariant===0||curVariant===3){
     const el=document.getElementById('circP'); if(el) el.style.strokeDashoffset=circ-(circ*pct);
   } else if(curVariant===1){

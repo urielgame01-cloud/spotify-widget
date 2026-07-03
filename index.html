@@ -108,6 +108,7 @@ button:hover{transform:translateY(-1px);opacity:.9;}
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   animation:driftT 12s ease-in-out infinite,breatheT 6s ease-in-out infinite;
 }
+@keyframes vinylSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes driftT{0%{background-position:0%}50%{background-position:200%}100%{background-position:400%}}
 @keyframes breatheT{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.014);opacity:1}}
 
@@ -231,8 +232,8 @@ function hideAllBars(){
   if(waveRAF){cancelAnimationFrame(waveRAF);waveRAF=null;}
 }
 
-// art-frame: 240×240, inset:-12px for SVG = 264×264
-const AF=240, SVG_PAD=12, SZ=AF+SVG_PAD*2; // 264
+// art-frame: 240x240 circle. SVG wraps 14px pad = 268x268
+const AF=240, SVG_PAD=14, SZ=AF+SVG_PAD*2; // 268
 
 function setupBar(idx, p){
   hideAllBars();
@@ -244,32 +245,30 @@ function setupBar(idx, p){
   svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${-SVG_PAD}px;left:${-SVG_PAD}px;z-index:5;pointer-events:none;overflow:visible;`;
   svg.setAttribute('viewBox',`0 0 ${SZ} ${SZ}`);
 
-  if(idx===0){
-    // square clockwise
-    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <rect x="4" y="4" width="${SZ-8}" height="${SZ-8}" rx="${rx}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <rect id="sqP" x="4" y="4" width="${SZ-8}" height="${SZ-8}" rx="${rx}" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perimSq}" stroke-dashoffset="${perimSq}" transform="rotate(-90 ${R} ${R})"/>`;
-  } else if(idx===1){
-    // square two sides
-    const h=perimSq/2;
-    svg.innerHTML=`<rect x="4" y="4" width="${SZ-8}" height="${SZ-8}" rx="${rx}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <rect id="sqA" x="4" y="4" width="${SZ-8}" height="${SZ-8}" rx="${rx}" fill="none" stroke="${p.c2}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perimSq}" stroke-dashoffset="${h}" transform="rotate(-90 ${R} ${R})"/>
-    <rect id="sqB" x="4" y="4" width="${SZ-8}" height="${SZ-8}" rx="${rx}" fill="none" stroke="${p.c1}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perimSq}" stroke-dashoffset="${h}" transform="rotate(90 ${R} ${R})"/>`;
-  } else if(idx===2){
-    // circle
-    const cr=R-5, circ=2*Math.PI*cr;
-    svg.innerHTML=`<defs><linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <circle cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <circle id="circP" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="url(#pg2)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${circ.toFixed(1)}" transform="rotate(-90 ${R} ${R})"/>`;
-  } else if(idx===3){
-    // square + glow dot
-    svg.innerHTML=`<defs>
-    <filter id="gf"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <linearGradient id="pg3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <rect x="4" y="4" width="${SZ-8}" height="${SZ-8}" rx="${rx}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
-    <rect id="sqDotP" x="4" y="4" width="${SZ-8}" height="${SZ-8}" rx="${rx}" fill="none" stroke="url(#pg3)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perimSq}" stroke-dashoffset="${perimSq}" transform="rotate(-90 ${R} ${R})"/>
-    <circle id="glowDot" cx="${R}" cy="4" r="5" fill="${p.c2}" filter="url(#gf)"/>`;
-  } else if(idx===4){
+  const R=SZ/2, cr=R-6, circ=+(2*Math.PI*cr).toFixed(1);
+  const svg=document.getElementById('progressSvg');
+  svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${-SVG_PAD}px;left:${-SVG_PAD}px;z-index:5;pointer-events:none;overflow:visible;`;
+  svg.setAttribute('viewBox',`0 0 ${SZ} ${SZ}`);
+
+  function mkCirc(dual, glowDot){
+    let s=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient>`;
+    if(glowDot) s+=`<filter id="gf"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+    s+=`</defs><circle cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>`;
+    if(dual){
+      s+=`<circle id="circA" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c2}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(-90 ${R} ${R})"/>`;
+      s+=`<circle id="circB" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c1}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(90 ${R} ${R})"/>`;
+    } else {
+      s+=`<circle id="circP" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" transform="rotate(-90 ${R} ${R})"/>`;
+    }
+    if(glowDot) s+=`<circle id="glowDot" cx="${R}" cy="${SVG_PAD}" r="5" fill="${p.c2}" filter="url(#gf)"/>`;
+    svg.innerHTML=s;
+  }
+
+  if(idx===0){ mkCirc(false,false); }
+  else if(idx===1){ mkCirc(true,false); }
+  else if(idx===2){ mkCirc(false,true); }
+  else if(idx===3){ mkCirc(false,false); }
+  else if(idx===4){
     svg.innerHTML='';
     const el=document.getElementById('barLinear'); el.style.display='block';
     document.getElementById('barL').style.background=`linear-gradient(90deg,${p.c1},${p.c2})`;
@@ -297,32 +296,61 @@ function setupBar(idx, p){
     const wctx=wc.getContext('2d');
     let wt=0;
     (function wd(){wctx.clearRect(0,0,wc.width,wc.height);const W=wc.width,H=wc.height,bars=34;for(let i=0;i<bars;i++){const filled=i/bars<progressPct,bh=H*.2+Math.abs(Math.sin(i*.6+wt))*H*.65;wctx.fillStyle=filled?`rgba(${p.rgb},.85)`:`rgba(255,255,255,.1)`;wctx.fillRect(i/bars*W,H/2-bh/2,W/bars-2,bh);}wt+=.045;waveRAF=requestAnimationFrame(wd);})();
+  } else if(idx===10){
+    // hexagono
+    const R=SZ/2,r=R-8;
+    const pts=Array.from({length:6},(_,i)=>{const a=Math.PI/2+i*Math.PI/3;return `${(R+r*Math.cos(a)).toFixed(1)},${(R-r*Math.sin(a)).toFixed(1)}`;}).join(' ');
+    const perim=+(6*r*2).toFixed(0);
+    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
+    <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3" stroke-linejoin="round"/>
+    <polygon id="shProg" points="${pts}" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
+    svg.dataset.perim=perim;
+  } else if(idx===11){
+    // cuadrado redondeado
+    const perim=1020;
+    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
+    <rect x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
+    <rect id="shProg" x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${SZ/2} ${SZ/2})"/>`;
+    svg.dataset.perim=perim;
+  } else if(idx===12){
+    // rombo redondeado
+    const R=SZ/2,perim=760;
+    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
+    <path d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
+    <path id="shProg" d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
+    svg.dataset.perim=perim;
+  } else if(idx===13){
+    // arco / media D
+    const R=SZ/2,perim=930;
+    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
+    <path d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3" stroke-linejoin="round"/>
+    <path id="shProg" d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
+    svg.dataset.perim=perim;
+  } else if(idx===14){
+    // ovalo vertical
+    const R=SZ/2,rx=R-8,ry=R-4,perim=780;
+    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
+    <ellipse cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
+    <ellipse id="shProg" cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="url(#pg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${R} ${R})"/>`;
+    svg.dataset.perim=perim;
   }
   updateBar();
 }
 
 function updateBar(){
   const pct=progressPct;
-  const perimSq=(SZ-8)*4;
-  if(curVariant===0){
-    const el=document.getElementById('sqP'); if(el) el.style.strokeDashoffset=perimSq-(perimSq*pct);
+  const svg=document.getElementById('progressSvg');
+  const R=SZ/2, cr=R-6, circ=2*Math.PI*cr;
+  if(curVariant===0||curVariant===3){
+    const el=document.getElementById('circP'); if(el) el.style.strokeDashoffset=circ-(circ*pct);
   } else if(curVariant===1){
-    const a=document.getElementById('sqA'),b=document.getElementById('sqB'); if(!a)return;
-    const h=perimSq/2; a.style.strokeDashoffset=h-(h*pct); b.style.strokeDashoffset=h-(h*pct);
+    const a=document.getElementById('circA'),b=document.getElementById('circB'); if(!a)return;
+    const h=circ/2; a.style.strokeDashoffset=h-(h*pct); b.style.strokeDashoffset=h-(h*pct);
   } else if(curVariant===2){
-    const el=document.getElementById('circP'); if(!el)return;
-    const cr=SZ/2-5,circ=2*Math.PI*cr; el.style.strokeDashoffset=circ-(circ*pct);
-  } else if(curVariant===3){
-    const el=document.getElementById('sqDotP'),gd=document.getElementById('glowDot'); if(!el)return;
-    el.style.strokeDashoffset=perimSq-(perimSq*pct);
-    // move glow dot along square perimeter
-    const side=SZ-8,dist=pct*perimSq,ox=4,oy=4;
-    let dx,dy;
-    if(dist<=side){dx=ox+dist;dy=oy;}
-    else if(dist<=side*2){dx=ox+side;dy=oy+(dist-side);}
-    else if(dist<=side*3){dx=ox+side-(dist-side*2);dy=oy+side;}
-    else{dx=ox;dy=oy+side-(dist-side*3);}
-    if(gd){gd.setAttribute('cx',dx);gd.setAttribute('cy',dy);}
+    const el=document.getElementById('circP'),gd=document.getElementById('glowDot'); if(!el)return;
+    el.style.strokeDashoffset=circ-(circ*pct);
+    const angle=-Math.PI/2+pct*Math.PI*2;
+    if(gd){gd.setAttribute('cx',R+Math.cos(angle)*cr);gd.setAttribute('cy',R+Math.sin(angle)*cr);}
   } else if(curVariant===4){
     const h=pct*50;
     document.getElementById('barL').style.width=h+'%';
@@ -337,8 +365,11 @@ function updateBar(){
     for(let i=0;i<ch.length;i++) ch[i].style.background=i<f?`rgba(${curPal.rgb},.85)`:'rgba(255,255,255,.08)';
   } else if(curVariant===8){
     document.getElementById('barFadeFill').style.width=(pct*100)+'%';
+  } else if(curVariant>=10 && curVariant<=14){
+    const el=document.getElementById('shProg'); if(!el)return;
+    const perim=parseFloat(svg.dataset.perim||'800');
+    el.style.strokeDashoffset=perim-(perim*pct);
   }
-  // 9 = waveform reads progressPct directly
 }
 
 /* ══ FX PARTICLES ══ */
@@ -400,7 +431,7 @@ function showTrack(data){
     const p=applyPal(key);
     const h=hash(key);
     startFx(h%10,p.rgb);
-    setupBar(h%10,p);
+    setupBar(h%15,p);
   }
   G('artFrame').style.animationPlayState=data.is_playing?'running':'paused';
   const img=(item.album&&item.album.images||[])[0];

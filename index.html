@@ -240,7 +240,7 @@ function setupBar(idx, p){
   curVariant=idx;
   const svg=document.getElementById('progressSvg');
   const R=SZ/2, cr=R-6, circ=+(2*Math.PI*cr).toFixed(1);
-  svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${-SVG_PAD}px;left:${-SVG_PAD}px;z-index:5;pointer-events:none;overflow:visible;`;
+  const _vz=320,_off=(_vz-SZ)/2; svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${_off}px;left:${_off}px;z-index:5;pointer-events:none;overflow:visible;`;
   svg.setAttribute('viewBox',`0 0 ${SZ} ${SZ}`);
 
   function mkCirc(dual, glowDot){

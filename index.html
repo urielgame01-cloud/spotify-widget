@@ -239,14 +239,7 @@ function setupBar(idx, p){
   hideAllBars();
   curVariant=idx;
   const svg=document.getElementById('progressSvg');
-  const R=SZ/2, perimSq=(SZ-8)*4, rx=16+SVG_PAD;
-
-  // position SVG over art-frame
-  svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${-SVG_PAD}px;left:${-SVG_PAD}px;z-index:5;pointer-events:none;overflow:visible;`;
-  svg.setAttribute('viewBox',`0 0 ${SZ} ${SZ}`);
-
   const R=SZ/2, cr=R-6, circ=+(2*Math.PI*cr).toFixed(1);
-  const svg=document.getElementById('progressSvg');
   svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${-SVG_PAD}px;left:${-SVG_PAD}px;z-index:5;pointer-events:none;overflow:visible;`;
   svg.setAttribute('viewBox',`0 0 ${SZ} ${SZ}`);
 

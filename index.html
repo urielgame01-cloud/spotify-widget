@@ -30,10 +30,19 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 
 /* Vinyl zone */
 .vinyl-zone{position:relative;width:300px;height:300px;flex-shrink:0;z-index:2;display:flex;align-items:center;justify-content:center;}
-.art-frame{width:200px;height:200px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px rgba(255,255,255,.1),0 8px 40px rgba(0,0,0,.5);animation:vinylSpin 9s linear infinite;}
+#artAura{position:absolute;width:220px;height:220px;border-radius:50%;opacity:0;filter:blur(28px);transition:background 2.5s ease, opacity 1.5s ease;z-index:0;}
+.art-frame{width:200px;height:200px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px rgba(255,255,255,.1),0 8px 40px rgba(0,0,0,.5);animation:vinylSpin 9s linear infinite;transition:filter .12s ease;}
 @keyframes vinylSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .art{width:100%;height:100%;object-fit:cover;background:#1a0d2b;display:block;}
+.shimmer-overlay{position:absolute;inset:0;border-radius:50%;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:200% 100%;z-index:3;pointer-events:none;opacity:0;}
+.shimmer-overlay.active{animation:shimmerSwipe .7s ease forwards;}
+@keyframes shimmerSwipe{0%{opacity:0;background-position:200% 0}40%{opacity:1}100%{opacity:0;background-position:-200% 0}}
+.art-shimmer{position:absolute;inset:0;border-radius:50%;background:linear-gradient(105deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.55) 50%,rgba(255,255,255,0) 70%);background-size:300% 100%;opacity:0;pointer-events:none;z-index:5;}
+.art-frame.shimmering .art-shimmer{animation:shimmerSlide .7s ease-out forwards;}
+@keyframes shimmerSlide{0%{opacity:0;background-position:120% 0}40%{opacity:1}100%{opacity:0;background-position:-20% 0}}
 .vinyl-hole{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.15),rgba(0,0,0,.5));z-index:4;}
+.aura{position:absolute;width:260px;height:260px;border-radius:50%;z-index:0;pointer-events:none;transition:box-shadow 2s ease,background 2s ease,transform .12s ease;animation:auraPulse 4s ease-in-out infinite;}
+@keyframes auraPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.85;transform:scale(1.06)}}
 
 /* Meta */
 .meta{flex:1;min-width:0;padding-left:52px;z-index:1;display:flex;flex-direction:column;justify-content:center;}
@@ -79,6 +88,9 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 .idle-card{display:none;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text-lo);font-size:1.1rem;}
 .idle-card.show{display:flex;}
 .logout{position:fixed;bottom:10px;right:16px;}
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(15,10,25,.92);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(12px);border-radius:999px;padding:10px 22px;font-size:.82rem;color:#f3eef8;white-space:nowrap;z-index:999;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s ease;opacity:0;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 .logout a{color:rgba(255,255,255,.1);font-size:.65rem;text-decoration:none;}
 .logout a:hover{color:var(--text-lo);}
 </style>
@@ -99,18 +111,22 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 <div class="card" id="nowPlayingCard">
   <canvas id="fxCanvas"></canvas>
   <div class="vinyl-zone">
-    <div class="art-frame" id="artFrame"><img class="art" id="art" src="" alt=""/></div>
+    <div id="artAura"></div>
+    <div class="art-frame" id="artFrame"><img class="art" id="art" src="" alt=""/><div class="art-shimmer"></div></div>
     <div class="vinyl-hole"></div>
   </div>
   <div class="meta">
     <div class="track" id="trackName">—</div>
     <div class="artist" id="artistName">—</div>
+    <div id="followersBadge" style="font-size:.85rem;color:rgba(255,255,255,.35);margin-bottom:18px;opacity:0;transition:opacity 1s ease;letter-spacing:.03em;"></div>
+    <div id="artistMeta" style="font-size:.85rem;color:rgba(255,255,255,.35);margin-bottom:16px;letter-spacing:.03em;min-height:1.2em;"></div>
     <div id="barWrap"></div>
   </div>
 </div>
 
 <div class="idle-card" id="idleCard">Abre Spotify y pon una canción ▶</div>
 <div class="logout" id="logoutWrap" style="display:none;"><a href="#" id="logoutLink">Desconectar</a></div>
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
@@ -142,6 +158,9 @@ function applyPal(key){
   const p=PAL[hash(key)%PAL.length]; curPal=p;
   document.getElementById('trackName').style.backgroundImage='linear-gradient(90deg,'+p.t.join(',')+')';
   document.getElementById('artistName').style.backgroundImage='linear-gradient(90deg,'+p.a.join(',')+')';
+  // 16: Update aura color
+  const aura=document.getElementById('aura');
+  if(aura) aura.style.boxShadow=`0 0 60px 30px rgba(${p.rgb},.25), 0 0 120px 60px rgba(${p.rgb},.1)`;
   return p;
 }
 
@@ -305,13 +324,99 @@ function updateBar(){
 /* ══ FX PARTICLES ══ — speed driven by BPM */
 let fxRAF=null;
 function stopFx(){if(fxRAF){cancelAnimationFrame(fxRAF);fxRAF=null;}}
+
+// 08: Toast notification
+let toastTimer=null;
+function showToast(track, artist){
+  const t=document.getElementById('toast');if(!t)return;
+  t.textContent=`♫ ${track} — ${artist}`;
+  t.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// 03: BPM pulse on aura + art
+let bpmPulseTimer=null;
+function startBPMPulse(){
+  if(bpmPulseTimer)clearInterval(bpmPulseTimer);
+  if(!currentBPM||currentBPM<40)return;
+  const interval=Math.round(60000/currentBPM);
+  const aura=document.getElementById('aura');
+  const art=document.getElementById('artFrame');
+  bpmPulseTimer=setInterval(()=>{
+    if(aura){aura.style.transform='scale(1.08)';setTimeout(()=>{aura.style.transform='';},120);}
+    if(art){art.style.filter='brightness(1.18)';setTimeout(()=>{art.style.filter='';},120);}
+  },interval);
+}
+
+// 09: Rotation speed by energy (0=slow 12s, 1=fast 4s)
+function setRotationByEnergy(energy){
+  const dur=Math.max(4,Math.round(12-(energy*8)));
+  const af=document.getElementById('artFrame');
+  if(af) af.style.animationDuration=dur+'s';
+}
+
+// 19: Burst explosion when song changes
+function triggerBurst(rgb){
+  const bc=document.getElementById('burstCanvas');
+  if(!bc)return;
+  bc.width=bc.offsetWidth;bc.height=bc.offsetHeight;
+  const ctx=bc.getContext('2d'),cx=bc.width/2,cy=bc.height/2;
+  const particles=Array.from({length:60},()=>({
+    x:cx,y:cy,
+    angle:Math.random()*Math.PI*2,
+    speed:Math.random()*6+2,
+    r:Math.random()*3+1,
+    life:1,decay:Math.random()*.02+.015,
+    vx:0,vy:0
+  }));
+  particles.forEach(p=>{p.vx=Math.cos(p.angle)*p.speed;p.vy=Math.sin(p.angle)*p.speed;});
+  let braf;
+  (function blow(){ctx.clearRect(0,0,bc.width,bc.height);
+    let alive=false;
+    particles.forEach(p=>{
+      if(p.life<=0)return; alive=true;
+      p.x+=p.vx;p.y+=p.vy;p.vx*=.95;p.vy*=.95;p.life-=p.decay;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${rgb},${p.life*.8})`;ctx.fill();
+    });
+    if(alive)braf=requestAnimationFrame(blow);
+    else ctx.clearRect(0,0,bc.width,bc.height);
+  })();
+}
+
+// 13: Shimmer on art
+function triggerShimmer(){
+  const s=document.getElementById('shimmer');if(!s)return;
+  s.classList.remove('active');void s.offsetWidth;s.classList.add('active');
+  setTimeout(()=>s.classList.remove('active'),800);
+}
+
+// 11: Particles born at art frame edge (used in FX variant 0 override)
+function spawnFromArt(cv,ctx){
+  const cw=cv.width,ch=cv.height,
+    ACX=50+150,ACY=ch/2,artR=100;
+  const angle=Math.random()*Math.PI*2;
+  return{
+    x:ACX+Math.cos(angle)*artR,
+    y:ACY+Math.sin(angle)*artR,
+    vx:Math.cos(angle)*(Math.random()*1.5+.5),
+    vy:Math.sin(angle)*(Math.random()*1.5+.5)-(Math.random()*.5),
+    r:Math.random()*2+.5,life:0,max:90+Math.random()*70,
+    wb:Math.random()*6,ws:.02,wa:.2
+  };
+}
 function startFx(ei,rgb){
   stopFx();
   const cv=document.getElementById('fxCanvas'),ctx=cv.getContext('2d');
   cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;
   const W=cv.width,H=cv.height,ACX=50+150,ACY=H/2;
   const E=[
-    ()=>{const P=Array.from({length:55},()=>sp());function sp(){return{x:Math.random()*W,y:H+5,vy:-(Math.random()*.5+.2),vx:(Math.random()-.5)*.35,r:Math.random()*1.8+.5,life:0,max:110+Math.random()*90,wb:Math.random()*6,ws:.02,wa:.4};}return()=>{ctx.clearRect(0,0,W,H);P.forEach(s=>{s.life++;s.wb+=s.ws;s.x+=s.vx+Math.sin(s.wb)*s.wa;s.y+=s.vy;if(s.life>s.max||s.y<-8)Object.assign(s,sp());const p=s.life/s.max,a=p<.15?p/.15:p>.75?(1-p)/.25:1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a*.85})`;ctx.fill();ctx.beginPath();ctx.arc(s.x,s.y,s.r*3.5,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a*.08})`;ctx.fill();});};},
+    ()=>{
+    // 11: particles born from art frame edge
+    function sp(){const angle=Math.random()*Math.PI*2;return{x:ACX+Math.cos(angle)*100,y:ACY+Math.sin(angle)*100,vx:Math.cos(angle)*(Math.random()*1.8+.6),vy:Math.sin(angle)*(Math.random()*1.8+.6),r:Math.random()*2+.5,life:0,max:100+Math.random()*80,wb:Math.random()*6,ws:.025*fxSpeedMult,wa:.3};}
+    const P=Array.from({length:55},()=>sp());
+    return()=>{ctx.clearRect(0,0,W,H);P.forEach(s=>{s.life++;s.wb+=s.ws;s.x+=s.vx+Math.sin(s.wb)*s.wa;s.y+=s.vy;s.vx*=.99;s.vy*=.99;if(s.life>s.max)Object.assign(s,sp());const p=s.life/s.max,a=p<.15?p/.15:p>.75?(1-p)/.25:1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a*.85})`;ctx.fill();ctx.beginPath();ctx.arc(s.x,s.y,s.r*3.5,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a*.08})`;ctx.fill();});};},
     ()=>{const R=Array.from({length:6},(_,i)=>({ph:i/6}));let t=0;return()=>{ctx.clearRect(0,0,W,H);t+=.01*fxSpeedMult;R.forEach(r=>{const p=(t*.28+r.ph)%1,rd=20+p*220,a=(1-p)*.22;ctx.beginPath();ctx.arc(ACX,ACY,rd,0,Math.PI*2);ctx.strokeStyle=`rgba(${rgb},${a})`;ctx.lineWidth=2.5-p*2;ctx.stroke();});};},
     ()=>{let t=0;return()=>{ctx.clearRect(0,0,W,H);t+=.018*fxSpeedMult;for(let w=0;w<6;w++){ctx.beginPath();const amp=5+w*2.5,freq=.013+w*.003,ph=t+w*1.1,yb=H*(.2+w*.11);ctx.moveTo(0,yb);for(let x=0;x<=W;x+=3)ctx.lineTo(x,yb+Math.sin(x*freq+ph)*amp+Math.sin(x*freq*.5+ph*.8)*amp*.4);ctx.strokeStyle=`rgba(${rgb},${.22-w*.03})`;ctx.lineWidth=1;ctx.stroke();}};},
     ()=>{let t=0;return()=>{ctx.clearRect(0,0,W,H);t+=.016*fxSpeedMult;const cy=H*.5,bt=((t*.7)%1);for(let ps=0;ps<2;ps++){ctx.beginPath();ctx.moveTo(0,cy);for(let x=0;x<W;x++){const nx=x/W,d=((nx-bt+1)%1);let y=cy;if(d<.04)y=cy-Math.sin(d/.04*Math.PI)*H*.38;else if(d<.055)y=cy+Math.sin((d-.04)/.015*Math.PI)*H*.2;else if(d<.075)y=cy-Math.sin((d-.055)/.02*Math.PI)*H*.1;ctx.lineTo(x,y);}ctx.strokeStyle=ps===0?`rgba(${rgb},.55)`:`rgba(${rgb},.1)`;ctx.lineWidth=ps===0?1.5:7;ctx.stroke();}};},
@@ -356,8 +461,28 @@ async function fetchBPM(trackId){
     const d=await r.json();
     if(d&&d.tempo){
       currentBPM=d.tempo;
-      // Normalize: slow=0.5x, normal=1x, fast=2x
       fxSpeedMult=Math.max(0.4,Math.min(2.2,(d.tempo-60)/120+0.8));
+      startBPMPulse(); // 03: start BPM pulse
+    }
+    if(d&&d.energy!==undefined){
+      setRotationByEnergy(d.energy); // 09: rotation speed by energy
+    }
+  }catch(e){}
+}
+
+// 14: Fetch artist popularity/followers
+async function fetchArtistInfo(artistId){
+  const tok=await getToken();if(!tok)return;
+  try{
+    const r=await fetch(`https://api.spotify.com/v1/artists/${artistId}`,{headers:{Authorization:'Bearer '+tok}});
+    if(!r.ok)return;
+    const d=await r.json();
+    if(d&&d.followers){
+      const followers=d.followers.total;
+      const fmt=followers>=1000000?`${(followers/1000000).toFixed(1)}M`
+        :followers>=1000?`${(followers/1000).toFixed(0)}K`:followers;
+      const el=document.getElementById('followersBadge');
+      if(el){el.textContent=`${fmt} seguidores`;el.style.opacity='1';}
     }
   }catch(e){}
 }
@@ -382,20 +507,46 @@ function showTrack(data){
   if(isNewTrack){
     lastId=item.id;
     fetchBPM(item.id); // async, non-blocking
+    if(item.artists&&item.artists[0]) fetchArtistInfo(item.artists[0].id);
+    const badge=document.getElementById('followersBadge');
+    if(badge){badge.style.opacity='0';badge.textContent='';}
+    if(item.artists&&item.artists[0]) fetchArtistInfo(item.artists[0].id);
 
-    // Crossfade: fade out → update → fade in
+    // Fetch artist info (popularity + followers)
+async function fetchArtistInfo(artistId){
+  const tok=await getToken();if(!tok)return;
+  try{
+    const r=await fetch(`https://api.spotify.com/v1/artists/${artistId}`,{headers:{Authorization:'Bearer '+tok}});
+    if(!r.ok)return;
+    const d=await r.json();
+    if(d){
+      const followers=d.followers&&d.followers.total?new Intl.NumberFormat().format(d.followers.total):'';
+      const pop=d.popularity||0;
+      const stars='🔥'.repeat(Math.round(pop/25));
+      G('artistMeta').textContent=followers?`${followers} seguidores · ${stars} ${pop}/100`:'';
+    }
+  }catch(e){}
+}
+
+// Crossfade: fade out → update → fade in
     card.style.opacity='0';
     setTimeout(()=>{
       const p=applyPal(key),h=hash(key);
       startFx(h%10,p.rgb);
       setupBar(h%15,p);
+      setTimeout(()=>{triggerBurst(p.rgb);triggerShimmer();},300);
+      showToast(item.name, item.artists.map(a=>a.name).join(', ')); // 08: toast
+      // Aura glow (use palette color)
+      const aura=G('artAura');
+      if(aura){aura.style.background=`radial-gradient(circle,rgba(${p.rgb},0.55) 0%,rgba(${p.rgb},0) 70%)`;aura.style.opacity='1';}
       const img=(item.album&&item.album.images||[])[0];
       G('art').src=img?img.url:'';G('art').alt=item.name;
       G('trackName').textContent=item.name;
       G('artistName').textContent=item.artists.map(a=>a.name).join(', ');
       // Entry animations
-      G('artFrame').classList.remove('art-pop');void G('artFrame').offsetWidth;
+      G('artFrame').classList.remove('art-pop','shimmering');void G('artFrame').offsetWidth;
       G('artFrame').classList.add('art-pop');
+      setTimeout(()=>{G('artFrame').classList.add('shimmering');setTimeout(()=>G('artFrame').classList.remove('shimmering'),750);},300);
       G('trackName').classList.remove('track-enter');void G('trackName').offsetWidth;
       G('trackName').classList.add('track-enter');
       G('artistName').classList.remove('artist-enter');void G('artistName').offsetWidth;
@@ -427,12 +578,26 @@ async function fetchNow(){
   try{
     const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+tok}});
     if(r.status===204){q429=0;showIdle();return;}if(r.status===401){showLogin('Sesión expirada.');return;}
-    if(r.status===429){q429++;const w=Math.max(parseInt(r.headers.get('Retry-After')||'0',10),Math.min(20*Math.pow(2,q429-1),1800));if(pollT)clearInterval(pollT);setTimeout(startPolling,(w+1)*1000);return;}
+    if(r.status===429){
+      q429++;
+      const w=Math.max(parseInt(r.headers.get('Retry-After')||'0',10),Math.min(30*Math.pow(2,q429-1),3600));
+      if(pollT){clearInterval(pollT);pollT=null;}
+      if(progT){clearInterval(progT);progT=null;}
+      console.log(`Rate limited. Waiting ${w}s before retry.`);
+      setTimeout(startPolling,(w+1)*1000);
+      return;
+    }
     q429=0;if(!r.ok){showIdle();return;}const d=await r.json();if(!d||!d.item){showIdle();return;}showTrack(d);
   }catch(e){showIdle();}
 }
 
-function startPolling(){fetchNow();if(pollT)clearInterval(pollT);pollT=setInterval(fetchNow,1000);if(progT)clearInterval(progT);progT=setInterval(tickBar,500);}
+function startPolling(){
+  if(pollT){clearInterval(pollT);pollT=null;}
+  if(progT){clearInterval(progT);progT=null;}
+  fetchNow();
+  pollT=setInterval(fetchNow,1000);
+  progT=setInterval(tickBar,500);
+}
 
 function showLogin(err){stopFx();if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}if(pollT)clearInterval(pollT);if(progT)clearInterval(progT);G('nowPlayingCard').classList.remove('show');G('idleCard').classList.remove('show');G('logoutWrap').style.display='none';G('setupScreen').style.display='block';const id=ls.g('sp_cid');if(id)G('clientId').value=id;if(err)showErr(err);}
 function showPlayer(){G('setupScreen').style.display='none';G('logoutWrap').style.display='block';startPolling();}

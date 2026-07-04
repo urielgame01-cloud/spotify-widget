@@ -7,16 +7,9 @@
 <style>
 :root{--accent:#b48ad2;--accent-2:#6d4f8c;--text-hi:#f3eef8;--text-lo:#a89bb8;--line:rgba(255,255,255,0.08);--warn:#e0576b;}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{
-  background:transparent;
-  color:var(--text-hi);
-  font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
-  width:1600px;height:400px;
-  overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-}
+html,body{background:transparent;color:var(--text-hi);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;width:1600px;height:400px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
 
-/* ── SETUP ── */
+/* Setup */
 .setup{background:rgba(12,8,20,.97);border:1px solid var(--line);border-radius:18px;padding:32px 28px;max-width:540px;width:100%;}
 .setup h1{font-size:1rem;letter-spacing:.05em;text-transform:uppercase;margin:0 0 6px;}
 .setup p{color:var(--text-lo);font-size:.85rem;line-height:1.55;margin:0 0 18px;}
@@ -30,131 +23,63 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 .hint b{color:var(--text-hi);}
 .err{color:var(--warn);font-size:.8rem;margin-top:8px;}
 
-/* ── CARD ── */
-.card{
-  display:none;
-  position:relative;
-  width:1600px;height:400px;
-  overflow:hidden;
-  align-items:center;
-  /* left padding = 50px gap before vinyl area; vinyl area = 340px; gap to meta = 50px */
-  padding:0 80px 0 50px;
-  gap:0;
-}
+/* Card */
+.card{display:none;position:relative;width:1600px;height:400px;overflow:hidden;align-items:center;padding:0 80px 0 50px;}
 .card.show{display:flex;}
-
-/* FX particles canvas */
 #fxCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
 
-/* ── VINYL ZONE: fixed 340px wide ── */
-.vinyl-zone{
-  position:relative;
-  width:340px;
-  height:340px; /* taller than card so disk can peek top/bottom */
-  flex-shrink:0;
-  z-index:2;
-  display:flex;align-items:center;justify-content:center;
-}
-/* the album art — gira como un vinilo */
-.art-frame{
-  position:absolute;
-  width:260px;height:260px;
-  border-radius:50%;
-  z-index:4;
-  overflow:hidden;
-  box-shadow:0 0 0 3px rgba(255,255,255,.06), 0 12px 48px rgba(0,0,0,.7);
-  animation:vinylSpin 9s linear infinite;
-}
-/* counter-rotate the img so the image itself stays upright but frame spins */
-/* we actually WANT the image to spin — it IS the vinyl */
-.art{
-  width:100%;height:100%;
-  object-fit:cover;
-  background:#1a0d2b;
-  display:block;
-}
-/* small center hole overlay */
-.vinyl-hole{
-  position:absolute;
-  width:18px;height:18px;border-radius:50%;
-  background:radial-gradient(circle,#fff2 0%,#0008 100%);
-  z-index:6;pointer-events:none;
-}
+/* Vinyl zone */
+.vinyl-zone{position:relative;width:300px;height:300px;flex-shrink:0;z-index:2;display:flex;align-items:center;justify-content:center;}
+.art-frame{width:200px;height:200px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px rgba(255,255,255,.1),0 8px 40px rgba(0,0,0,.5);animation:vinylSpin 9s linear infinite;}
+@keyframes vinylSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.art{width:100%;height:100%;object-fit:cover;background:#1a0d2b;display:block;}
+.vinyl-hole{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.15),rgba(0,0,0,.5));z-index:4;}
 
-/* SVG progress overlay on the art-frame */
-#progressSvg{
-  position:absolute;
-  /* sized & positioned via JS */
-  z-index:5;
-  pointer-events:none;
-}
-
-/* ── META (text + bar) ── */
-.meta{
-  flex:1;
-  min-width:0;
-  padding-left:56px;
-  z-index:1;
-  display:flex;flex-direction:column;justify-content:center;
-}
+/* Meta */
+.meta{flex:1;min-width:0;padding-left:52px;z-index:1;display:flex;flex-direction:column;justify-content:center;}
 
 .track{
-  font-size:3.6rem;font-weight:700;line-height:1.05;
-  margin-bottom:10px;
+  font-size:3.8rem;font-weight:700;line-height:1.0;margin-bottom:12px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:inline-block;width:100%;
-  background:linear-gradient(90deg,#f5c06a,#e8885a,#d4607a,#e8885a,#f5c06a);
+  background:linear-gradient(90deg,#ff6b35,#f7c59f,#ff6b35);
   background-size:400% auto;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:driftT 12s ease-in-out infinite,breatheT 6s ease-in-out infinite;
+  animation:driftT 10s ease-in-out infinite,breatheT 5s ease-in-out infinite;
 }
-@keyframes vinylSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes driftT{0%{background-position:0%}50%{background-position:200%}100%{background-position:400%}}
-@keyframes breatheT{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.014);opacity:1}}
+@keyframes breatheT{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.01);opacity:1}}
 
 .artist{
-  font-size:1.85rem;font-weight:400;
-  margin-bottom:30px;
+  font-size:2rem;font-weight:400;margin-bottom:26px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:inline-block;width:100%;
-  background:linear-gradient(90deg,#e8c99a,#c9a87c,#ddb896,#e8c99a);
+  background:linear-gradient(90deg,#ffd166,#ef8c8c,#ffd166);
   background-size:350% auto;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:driftA 16s ease-in-out infinite,breatheA 8s ease-in-out infinite;
+  animation:driftA 14s ease-in-out infinite,breatheA 7s ease-in-out infinite;
 }
 @keyframes driftA{0%{background-position:0%}50%{background-position:175%}100%{background-position:350%}}
-@keyframes breatheA{0%,100%{opacity:.65;letter-spacing:0}50%{opacity:1;letter-spacing:.02em}}
+@keyframes breatheA{0%,100%{opacity:.75;letter-spacing:0}50%{opacity:1;letter-spacing:.02em}}
 
-/* ── PROGRESS BARS ── all at 40% width when linear ── */
-#barLinear{width:40%;height:3px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;display:none;}
-#barL{position:absolute;right:50%;top:0;height:100%;width:0%;border-radius:2px 0 0 2px;}
-#barR{position:absolute;left:50%;top:0;height:100%;width:0%;border-radius:0 2px 2px 0;}
-#barClassic{width:40%;height:3px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;display:none;}
-#barClassicFill{position:absolute;left:0;top:0;height:100%;width:0%;border-radius:2px;}
-#barFade{width:40%;height:2px;border-radius:1px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;display:none;}
-#barFadeFill{position:absolute;left:0;top:0;height:100%;width:0%;border-radius:1px;}
-#barDots{display:none;gap:6px;flex-wrap:nowrap;align-items:center;}
-#barSegs{display:none;gap:3px;width:40%;}
-#barWave{width:40%;height:24px;display:none;}
+/* Progress bar container — 40% max width */
+#barWrap{width:42%;position:relative;}
 
-/* ── IDLE ── */
+/* Idle */
 .idle-card{display:none;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text-lo);font-size:1.1rem;}
 .idle-card.show{display:flex;}
-
 .logout{position:fixed;bottom:10px;right:16px;}
 .logout a{color:rgba(255,255,255,.1);font-size:.65rem;text-decoration:none;}
 .logout a:hover{color:var(--text-lo);}
 </style>
 </head>
 <body>
-
 <div id="setupScreen" class="setup">
   <h1>Spotify Now Playing</h1>
-  <p>Conecta tu cuenta de Spotify. Solo necesitas el <b>Client ID</b> de tu app en el
-    <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:var(--accent)">Dashboard de Spotify</a>.</p>
+  <p>Conecta tu cuenta de Spotify. Solo necesitas el <b>Client ID</b> de tu app en el <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:var(--accent)">Dashboard de Spotify</a>.</p>
   <label for="clientId">Client ID</label>
   <input type="text" id="clientId" placeholder="Pega aquí tu Client ID"/>
-  <label>Redirect URI — agrégala en tu app de Spotify en "Redirect URIs"</label>
+  <label>Redirect URI — agrégala en tu app en "Redirect URIs"</label>
   <div class="redirect-box" id="redirectBox"></div>
   <button id="loginBtn">Conectar con Spotify</button>
   <div class="err" id="errBox" style="display:none;"></div>
@@ -163,52 +88,41 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 
 <div class="card" id="nowPlayingCard">
   <canvas id="fxCanvas"></canvas>
-
-  <!-- VINYL + ART -->
-  <div class="vinyl-zone" id="vinylZone">
-    <div class="art-frame" id="artFrame">
-      <img class="art" id="art" src="" alt=""/>
-    </div>
+  <div class="vinyl-zone">
+    <div class="art-frame" id="artFrame"><img class="art" id="art" src="" alt=""/></div>
     <div class="vinyl-hole"></div>
-    <svg id="progressSvg"></svg>
   </div>
-
-  <!-- TEXT + PROGRESS -->
   <div class="meta">
     <div class="track" id="trackName">—</div>
     <div class="artist" id="artistName">—</div>
-
-    <div id="barLinear"><div id="barL"></div><div id="barR"></div></div>
-    <div id="barClassic"><div id="barClassicFill"></div></div>
-    <div id="barFade"><div id="barFadeFill"></div></div>
-    <div id="barDots"></div>
-    <div id="barSegs"></div>
-    <canvas id="barWave"></canvas>
+    <div id="barWrap"></div>
   </div>
 </div>
 
 <div class="idle-card" id="idleCard">Abre Spotify y pon una canción ▶</div>
-
-<div class="logout" id="logoutWrap" style="display:none;">
-  <a href="#" id="logoutLink">Desconectar</a>
-</div>
+<div class="logout" id="logoutWrap" style="display:none;"><a href="#" id="logoutLink">Desconectar</a></div>
 
 <script>
 (function(){
 "use strict";
 
-/* ══ PALETTES ══ */
+/* ══ PALETTES — vivid & saturated ══ */
 const PAL=[
-  {t:['#f5c06a','#e8885a','#d4607a','#e8885a','#f5c06a'],a:['#e8c99a','#c9a87c','#ddb896','#e8c99a'],c1:'#c9905a',c2:'#f5c06a',rgb:'245,192,106'},
-  {t:['#f0a0a0','#e87878','#d45060','#e87878','#f0a0a0'],a:['#e8c4b8','#d4a090','#c88070','#e8c4b8'],c1:'#c96060',c2:'#f0a0a0',rgb:'232,136,90'},
-  {t:['#f0c060','#e8a040','#d08020','#e8a040','#f0c060'],a:['#e8d090','#d0b060','#c0a040','#e8d090'],c1:'#c09030',c2:'#f0c060',rgb:'240,192,96'},
-  {t:['#a8d090','#80b868','#60a050','#80b868','#a8d090'],a:['#c8deb8','#a8c898','#90b880','#c8deb8'],c1:'#60a050',c2:'#a8d090',rgb:'168,208,144'},
-  {t:['#f0b898','#e09070','#c87050','#e09070','#f0b898'],a:['#e8c8b8','#d0a890','#c09078','#e8c8b8'],c1:'#c08060',c2:'#f0b898',rgb:'240,184,152'},
-  {t:['#e8807a','#d05050','#b83030','#d05050','#e8807a'],a:['#e0a898','#c88878','#b06858','#e0a898'],c1:'#b04040',c2:'#e8807a',rgb:'212,96,122'},
-  {t:['#d4c090','#c0a868','#a89048','#c0a868','#d4c090'],a:['#e0d4b0','#c8bc90','#b0a478','#e0d4b0'],c1:'#a09040',c2:'#d4c090',rgb:'200,180,120'},
-  {t:['#b8d8c0','#90c0a0','#70a880','#90c0a0','#b8d8c0'],a:['#d0e4d8','#b0ccc0','#98b8a8','#d0e4d8'],c1:'#70a880',c2:'#b8d8c0',rgb:'168,220,200'},
-  {t:['#f0c8a0','#e0a878','#d09058','#e0a878','#f0c8a0'],a:['#e8d8c0','#d8c0a0','#c8a888','#e8d8c0'],c1:'#c89060',c2:'#f0c8a0',rgb:'240,160,120'},
-  {t:['#c8d8a0','#a8c078','#88a860','#a8c078','#c8d8a0'],a:['#d8e4c0','#c0d0a0','#a8bc88','#d8e4c0'],c1:'#88a860',c2:'#c8d8a0',rgb:'200,216,160'},
+  {t:['#ff6b35','#f7c59f','#ff3860','#f7c59f','#ff6b35'],a:['#ffd166','#ff9f43','#ffd166'],c1:'#ff6b35',c2:'#ffd166',rgb:'255,107,53'},
+  {t:['#00d2ff','#7efff5','#00b4d8','#7efff5','#00d2ff'],a:['#90e0ef','#48cae4','#90e0ef'],c1:'#00b4d8',c2:'#90e0ef',rgb:'0,180,216'},
+  {t:['#f72585','#ff70a6','#b5179e','#ff70a6','#f72585'],a:['#ff70a6','#f72585','#ff70a6'],c1:'#f72585',c2:'#ff70a6',rgb:'247,37,133'},
+  {t:['#06d6a0','#8aff80','#00b4d8','#8aff80','#06d6a0'],a:['#8aff80','#06d6a0','#8aff80'],c1:'#06d6a0',c2:'#8aff80',rgb:'6,214,160'},
+  {t:['#f77f00','#fcbf49','#d62828','#fcbf49','#f77f00'],a:['#fcbf49','#f77f00','#fcbf49'],c1:'#f77f00',c2:'#fcbf49',rgb:'247,127,0'},
+  {t:['#7b2fff','#c77dff','#e0aaff','#c77dff','#7b2fff'],a:['#c77dff','#9d4edd','#c77dff'],c1:'#7b2fff',c2:'#c77dff',rgb:'123,47,255'},
+  {t:['#ff0a54','#ff477e','#ff85a1','#ff477e','#ff0a54'],a:['#ff85a1','#ff477e','#ff85a1'],c1:'#ff0a54',c2:'#ff85a1',rgb:'255,10,84'},
+  {t:['#2ec4b6','#cbf3f0','#ffbf69','#cbf3f0','#2ec4b6'],a:['#cbf3f0','#2ec4b6','#cbf3f0'],c1:'#2ec4b6',c2:'#cbf3f0',rgb:'46,196,182'},
+  {t:['#f4d35e','#ee964b','#f95738','#ee964b','#f4d35e'],a:['#f4d35e','#ee964b','#f4d35e'],c1:'#ee964b',c2:'#f4d35e',rgb:'244,211,94'},
+  {t:['#80ff72','#52b788','#1b4332','#52b788','#80ff72'],a:['#80ff72','#52b788','#80ff72'],c1:'#52b788',c2:'#80ff72',rgb:'128,255,114'},
+  {t:['#ff6fd8','#c77dff','#ff6fd8','#c77dff','#ff6fd8'],a:['#ff6fd8','#c77dff','#ff6fd8'],c1:'#c77dff',c2:'#ff6fd8',rgb:'255,111,216'},
+  {t:['#ffbe0b','#fb5607','#ff006e','#fb5607','#ffbe0b'],a:['#ffbe0b','#fb5607','#ffbe0b'],c1:'#fb5607',c2:'#ffbe0b',rgb:'255,190,11'},
+  {t:['#00f5d4','#00bbf9','#fee440','#00bbf9','#00f5d4'],a:['#00f5d4','#00bbf9','#00f5d4'],c1:'#00bbf9',c2:'#00f5d4',rgb:'0,245,212'},
+  {t:['#e63946','#f1faee','#a8dadc','#f1faee','#e63946'],a:['#f1faee','#a8dadc','#f1faee'],c1:'#e63946',c2:'#a8dadc',rgb:'230,57,70'},
+  {t:['#ff9505','#f7b731','#ff6348','#f7b731','#ff9505'],a:['#f7b731','#ff9505','#f7b731'],c1:'#ff9505',c2:'#f7b731',rgb:'255,149,5'},
 ];
 
 function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
@@ -221,148 +135,161 @@ function applyPal(key){
   return p;
 }
 
-/* ══ PROGRESS BARS ══ */
-let curVariant=-1, waveRAF=null, progressPct=0;
+/* ══ 15 PROGRESS BAR VARIANTS ══ */
+let curVariant=-1, barRAF=null, progressPct=0;
 
-function hideAllBars(){
-  ['barLinear','barClassic','barFade','barDots','barSegs','barWave'].forEach(id=>{
-    document.getElementById(id).style.display='none';
-  });
-  document.getElementById('progressSvg').innerHTML='';
-  if(waveRAF){cancelAnimationFrame(waveRAF);waveRAF=null;}
-}
+const BARS=[
+  // 0: Centro → ambos lados
+  (wrap,p)=>{
+    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
+      <div id="bL" style="position:absolute;right:50%;top:0;height:100%;width:0%;border-radius:2px 0 0 2px;background:linear-gradient(90deg,${p.c1},${p.c2});"></div>
+      <div id="bR" style="position:absolute;left:50%;top:0;height:100%;width:0%;border-radius:0 2px 2px 0;background:linear-gradient(90deg,${p.c2},${p.c1});"></div>
+    </div>`;
+    return pct=>{const h=pct*50;document.getElementById('bL').style.width=h+'%';document.getElementById('bR').style.width=h+'%';};
+  },
+  // 1: Clásica izq→der
+  (wrap,p)=>{
+    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;">
+      <div id="bC" style="height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,${p.c1},${p.c2},${p.c1});transition:width .3s linear;"></div>
+    </div>`;
+    return pct=>{document.getElementById('bC').style.width=(pct*100)+'%';};
+  },
+  // 2: Puntos que se iluminan
+  (wrap,p)=>{
+    const n=18;
+    wrap.innerHTML=`<div id="bD" style="display:flex;gap:5px;align-items:center;">${Array.from({length:n},()=>`<div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08);transition:background .2s;flex-shrink:0;"></div>`).join('')}</div>`;
+    const ch=document.getElementById('bD').children;
+    return pct=>{const f=Math.round(pct*n);for(let i=0;i<n;i++)ch[i].style.background=i<f?`rgba(${p.rgb},1)`:'rgba(255,255,255,.08)';};
+  },
+  // 3: Segmentos coloreados
+  (wrap,p)=>{
+    const n=16;
+    wrap.innerHTML=`<div id="bS" style="display:flex;gap:3px;">${Array.from({length:n},()=>`<div style="flex:1;height:5px;border-radius:2px;background:rgba(255,255,255,.08);transition:background .2s;"></div>`).join('')}</div>`;
+    const ch=document.getElementById('bS').children;
+    return pct=>{const f=Math.round(pct*n);for(let i=0;i<n;i++)ch[i].style.background=i<f?`rgba(${p.rgb},1)`:'rgba(255,255,255,.08)';};
+  },
+  // 4: Waveform
+  (wrap,p)=>{
+    wrap.innerHTML=`<canvas id="bW" style="width:100%;height:28px;display:block;"></canvas>`;
+    const wc=document.getElementById('bW');
+    wc.width=wc.offsetWidth*2||640; wc.height=56;
+    const wctx=wc.getContext('2d'); let wt=0;
+    if(barRAF)cancelAnimationFrame(barRAF);
+    (function wd(){wctx.clearRect(0,0,wc.width,wc.height);const W=wc.width,H=wc.height,bars=36;
+    for(let i=0;i<bars;i++){const filled=i/bars<progressPct,bh=H*.15+Math.abs(Math.sin(i*.7+wt))*H*.7;
+    wctx.fillStyle=filled?`rgba(${p.rgb},1)`:`rgba(255,255,255,.1)`;wctx.fillRect(i/bars*W,H/2-bh/2,W/bars-2,bh);}
+    wt+=.04;barRAF=requestAnimationFrame(wd);})();
+    return ()=>{};
+  },
+  // 5: Fade desde izquierda (desvanecimiento)
+  (wrap,p)=>{
+    wrap.innerHTML=`<div style="height:3px;border-radius:2px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;">
+      <div id="bF" style="position:absolute;left:0;top:0;height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,rgba(${p.rgb},0),rgba(${p.rgb},1));"></div>
+    </div>`;
+    return pct=>{document.getElementById('bF').style.width=(pct*100)+'%';};
+  },
+  // 6: Doble línea
+  (wrap,p)=>{
+    wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px;">
+      <div style="height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden;"><div id="bD1" style="height:100%;width:0%;background:rgba(${p.rgb},1);border-radius:2px;"></div></div>
+      <div style="height:2px;border-radius:1px;background:rgba(255,255,255,.05);overflow:hidden;"><div id="bD2" style="height:100%;width:0%;background:rgba(${p.rgb},.5);border-radius:1px;transition:width .3s linear;"></div></div>
+    </div>`;
+    return pct=>{document.getElementById('bD1').style.width=(pct*100)+'%';document.getElementById('bD2').style.width=(pct*100)+'%';};
+  },
+  // 7: Línea con pulso de brillo
+  (wrap,p)=>{
+    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
+      <div id="bP" style="height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,${p.c1},${p.c2});position:relative;"></div>
+      <div id="bPulse" style="position:absolute;top:0;height:100%;width:30px;background:rgba(255,255,255,.4);transform:skewX(-20deg);filter:blur(3px);"></div>
+    </div>`;
+    return pct=>{
+      const w=pct*100;
+      document.getElementById('bP').style.width=w+'%';
+      document.getElementById('bPulse').style.left=(w-4)+'%';
+    };
+  },
+  // 8: Puntos grandes con tamaño variable
+  (wrap,p)=>{
+    const n=12;
+    wrap.innerHTML=`<div id="bDV" style="display:flex;gap:6px;align-items:center;">${Array.from({length:n},(_,i)=>`<div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.08);transition:all .25s;flex-shrink:0;"></div>`).join('')}</div>`;
+    const ch=document.getElementById('bDV').children;
+    return pct=>{
+      const f=Math.round(pct*n);
+      for(let i=0;i<n;i++){
+        const active=i<f;
+        const size=active?Math.round(6+((i+1)/n)*6):6;
+        ch[i].style.background=active?`rgba(${p.rgb},1)`:'rgba(255,255,255,.08)';
+        ch[i].style.width=size+'px';ch[i].style.height=size+'px';
+      }
+    };
+  },
+  // 9: Guiones punteados llenándose
+  (wrap,p)=>{
+    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;">
+      <div id="bDash" style="height:100%;width:0%;background:repeating-linear-gradient(90deg,rgba(${p.rgb},1) 0px,rgba(${p.rgb},1) 8px,transparent 8px,transparent 14px);border-radius:2px;"></div>
+    </div>`;
+    return pct=>{document.getElementById('bDash').style.width=(pct*100)+'%';};
+  },
+  // 10: Bloques con separación
+  (wrap,p)=>{
+    const n=20;
+    wrap.innerHTML=`<div id="bBl" style="display:flex;gap:2px;">${Array.from({length:n},()=>`<div style="flex:1;height:8px;border-radius:1px;background:rgba(255,255,255,.08);transition:background .15s;"></div>`).join('')}</div>`;
+    const ch=document.getElementById('bBl').children;
+    return pct=>{const f=Math.round(pct*n);for(let i=0;i<n;i++)ch[i].style.background=i<f?`rgba(${p.rgb},.95)`:'rgba(255,255,255,.08)';};
+  },
+  // 11: Barra con gradiente animado que corre
+  (wrap,p)=>{
+    wrap.innerHTML=`<style>@keyframes barSlide{from{background-position:0% 0}to{background-position:200% 0}}</style>
+    <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;">
+      <div id="bG" style="height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,${p.c1},${p.c2},${p.c1});background-size:200% auto;animation:barSlide 2s linear infinite;"></div>
+    </div>`;
+    return pct=>{document.getElementById('bG').style.width=(pct*100)+'%';};
+  },
+  // 12: Línea EKG / latido
+  (wrap,p)=>{
+    wrap.innerHTML=`<canvas id="bEKG" style="width:100%;height:24px;display:block;"></canvas>`;
+    const ec=document.getElementById('bEKG');
+    ec.width=ec.offsetWidth*2||640; ec.height=48;
+    const ectx=ec.getContext('2d'); let et=0;
+    if(barRAF)cancelAnimationFrame(barRAF);
+    (function ed(){ectx.clearRect(0,0,ec.width,ec.height);et+=.016;
+    const W=ec.width,H=ec.height,cy=H*.5,beat=((et*.7)%1);
+    ectx.beginPath();ectx.moveTo(0,cy);
+    for(let x=0;x<W;x++){const nx=x/W;const active=nx<progressPct;const d=((nx-beat+1)%1);
+    let y=cy;if(d<.04)y=cy-Math.sin(d/.04*Math.PI)*H*.7;else if(d<.06)y=cy+Math.sin((d-.04)/.02*Math.PI)*H*.35;else if(d<.08)y=cy-Math.sin((d-.06)/.02*Math.PI)*H*.15;
+    ectx.lineTo(x,y);}
+    ectx.strokeStyle=`rgba(${p.rgb},.8)`;ectx.lineWidth=1.5;ectx.stroke();
+    barRAF=requestAnimationFrame(ed);})();
+    return ()=>{};
+  },
+  // 13: Escalera (bloques crecientes)
+  (wrap,p)=>{
+    const n=14;
+    wrap.innerHTML=`<div id="bSt" style="display:flex;gap:3px;align-items:flex-end;height:20px;">${Array.from({length:n},(_,i)=>`<div style="flex:1;border-radius:1px 1px 0 0;background:rgba(255,255,255,.08);height:${Math.round(4+(i/n)*16)}px;transition:background .2s;"></div>`).join('')}</div>`;
+    const ch=document.getElementById('bSt').children;
+    return pct=>{const f=Math.round(pct*n);for(let i=0;i<n;i++)ch[i].style.background=i<f?`rgba(${p.rgb},1)`:'rgba(255,255,255,.08)';};
+  },
+  // 14: Círculos concéntricos (radial fill)
+  (wrap,p)=>{
+    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
+      <div id="bRad" style="position:absolute;left:0;top:0;height:100%;width:0%;background:conic-gradient(rgba(${p.rgb},1) 0deg, rgba(${p.rgb},.6) 90deg, rgba(${p.rgb},1) 180deg, rgba(${p.rgb},.6) 270deg, rgba(${p.rgb},1) 360deg);border-radius:2px;"></div>
+    </div>`;
+    return pct=>{document.getElementById('bRad').style.width=(pct*100)+'%';};
+  },
+];
 
-// art-frame: 240x240 circle. SVG wraps 14px pad = 268x268
-const AF=200, SVG_PAD=18, SZ=AF+SVG_PAD*2; // 236
-
-function setupBar(idx, p){
-  hideAllBars();
+let barUpdate=null;
+function setupBar(idx,p){
+  if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}
+  const wrap=document.getElementById('barWrap');
+  wrap.innerHTML='';
   curVariant=idx;
-  const svg=document.getElementById('progressSvg');
-  const R=SZ/2, cr=R-8, circ=+(2*Math.PI*cr).toFixed(1);
-  const _vz=320,_off=(_vz-SZ)/2; svg.style.cssText=`position:absolute;width:${SZ}px;height:${SZ}px;top:${_off}px;left:${_off}px;z-index:5;pointer-events:none;overflow:visible;`;
-  svg.setAttribute('viewBox',`0 0 ${SZ} ${SZ}`);
-
-  function mkCirc(dual, glowDot){
-    let s=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient>`;
-    if(glowDot) s+=`<filter id="gf"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
-    s+=`</defs><circle cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>`;
-    if(dual){
-      s+=`<circle id="circA" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c2}" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(-90 ${R} ${R})"/>`;
-      s+=`<circle id="circB" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="${p.c1}" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ/2}" transform="rotate(90 ${R} ${R})"/>`;
-    } else {
-      s+=`<circle id="circP" cx="${R}" cy="${R}" r="${cr}" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" transform="rotate(-90 ${R} ${R})"/>`;
-    }
-    if(glowDot) s+=`<circle id="glowDot" cx="${R}" cy="${SVG_PAD}" r="5" fill="${p.c2}" filter="url(#gf)"/>`;
-    svg.innerHTML=s;
-  }
-
-  if(idx===0){ mkCirc(false,false); }
-  else if(idx===1){ mkCirc(true,false); }
-  else if(idx===2){ mkCirc(false,true); }
-  else if(idx===3){ mkCirc(false,false); }
-  else if(idx===4){
-    svg.innerHTML='';
-    const el=document.getElementById('barLinear'); el.style.display='block';
-    document.getElementById('barL').style.background=`linear-gradient(90deg,${p.c1},${p.c2})`;
-    document.getElementById('barR').style.background=`linear-gradient(90deg,${p.c2},${p.c1})`;
-  } else if(idx===5){
-    svg.innerHTML='';
-    const el=document.getElementById('barClassic'); el.style.display='block';
-    document.getElementById('barClassicFill').style.background=`linear-gradient(90deg,${p.c1},${p.c2},${p.t[2]})`;
-  } else if(idx===6){
-    svg.innerHTML='';
-    const el=document.getElementById('barDots'); el.innerHTML=''; el.style.display='flex';
-    for(let i=0;i<18;i++){const d=document.createElement('div');d.style.cssText=`width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.08);flex-shrink:0;transition:background .25s;`;el.appendChild(d);}
-  } else if(idx===7){
-    svg.innerHTML='';
-    const el=document.getElementById('barSegs'); el.innerHTML=''; el.style.display='flex';
-    for(let i=0;i<16;i++){const d=document.createElement('div');d.style.cssText=`flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.08);transition:background .25s;`;el.appendChild(d);}
-  } else if(idx===8){
-    svg.innerHTML='';
-    const el=document.getElementById('barFade'); el.style.display='block';
-    document.getElementById('barFadeFill').style.background=`linear-gradient(90deg,rgba(${p.rgb},0),${p.c2})`;
-  } else if(idx===9){
-    svg.innerHTML='';
-    const wc=document.getElementById('barWave'); wc.style.display='block';
-    wc.width=wc.offsetWidth*2||560; wc.height=48;
-    const wctx=wc.getContext('2d');
-    let wt=0;
-    (function wd(){wctx.clearRect(0,0,wc.width,wc.height);const W=wc.width,H=wc.height,bars=34;for(let i=0;i<bars;i++){const filled=i/bars<progressPct,bh=H*.2+Math.abs(Math.sin(i*.6+wt))*H*.65;wctx.fillStyle=filled?`rgba(${p.rgb},.85)`:`rgba(255,255,255,.1)`;wctx.fillRect(i/bars*W,H/2-bh/2,W/bars-2,bh);}wt+=.045;waveRAF=requestAnimationFrame(wd);})();
-  } else if(idx===10){
-    // hexagono
-    const R=SZ/2,r=R-8;
-    const pts=Array.from({length:6},(_,i)=>{const a=Math.PI/2+i*Math.PI/3;return `${(R+r*Math.cos(a)).toFixed(1)},${(R-r*Math.sin(a)).toFixed(1)}`;}).join(' ');
-    const perim=+(6*r*2).toFixed(0);
-    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5" stroke-linejoin="round"/>
-    <polygon id="shProg" points="${pts}" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
-    svg.dataset.perim=perim;
-  } else if(idx===11){
-    // cuadrado redondeado
-    const perim=1020;
-    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <rect x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>
-    <rect id="shProg" x="5" y="5" width="${SZ-10}" height="${SZ-10}" rx="22" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${SZ/2} ${SZ/2})"/>`;
-    svg.dataset.perim=perim;
-  } else if(idx===12){
-    // rombo redondeado
-    const R=SZ/2,perim=760;
-    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <path d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>
-    <path id="shProg" d="M${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} Q${SZ-6} ${SZ-6} ${R} ${SZ-6} Q6 ${SZ-6} 6 ${R} Q6 6 ${R} 6Z" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
-    svg.dataset.perim=perim;
-  } else if(idx===13){
-    // arco / media D
-    const R=SZ/2,perim=930;
-    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <path d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5" stroke-linejoin="round"/>
-    <path id="shProg" d="M6 ${SZ-6} L6 ${R} Q6 6 ${R} 6 Q${SZ-6} 6 ${SZ-6} ${R} L${SZ-6} ${SZ-6} Z" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>`;
-    svg.dataset.perim=perim;
-  } else if(idx===14){
-    // ovalo vertical
-    const R=SZ/2,rx=R-8,ry=R-4,perim=780;
-    svg.innerHTML=`<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="${p.c1}"/><stop offset="100%" stop-color="${p.c2}"/></linearGradient></defs>
-    <ellipse cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4.5"/>
-    <ellipse id="shProg" cx="${R}" cy="${R}" rx="${rx}" ry="${ry}" fill="none" stroke="url(#pg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${perim}" stroke-dashoffset="${perim}" transform="rotate(-90 ${R} ${R})"/>`;
-    svg.dataset.perim=perim;
-  }
-  updateBar();
+  barUpdate=BARS[idx%BARS.length](wrap,p)||null;
+  if(barUpdate) barUpdate(progressPct);
 }
-
 function updateBar(){
-  const pct=progressPct;
-  const svg=document.getElementById('progressSvg');
-  const R=SZ/2, cr=R-8, circ=2*Math.PI*cr;
-  if(curVariant===0||curVariant===3){
-    const el=document.getElementById('circP'); if(el) el.style.strokeDashoffset=circ-(circ*pct);
-  } else if(curVariant===1){
-    const a=document.getElementById('circA'),b=document.getElementById('circB'); if(!a)return;
-    const h=circ/2; a.style.strokeDashoffset=h-(h*pct); b.style.strokeDashoffset=h-(h*pct);
-  } else if(curVariant===2){
-    const el=document.getElementById('circP'),gd=document.getElementById('glowDot'); if(!el)return;
-    el.style.strokeDashoffset=circ-(circ*pct);
-    const angle=-Math.PI/2+pct*Math.PI*2;
-    if(gd){gd.setAttribute('cx',R+Math.cos(angle)*cr);gd.setAttribute('cy',R+Math.sin(angle)*cr);}
-  } else if(curVariant===4){
-    const h=pct*50;
-    document.getElementById('barL').style.width=h+'%';
-    document.getElementById('barR').style.width=h+'%';
-  } else if(curVariant===5){
-    document.getElementById('barClassicFill').style.width=(pct*100)+'%';
-  } else if(curVariant===6){
-    const ch=document.getElementById('barDots').children,f=Math.round(pct*ch.length);
-    for(let i=0;i<ch.length;i++) ch[i].style.background=i<f?`rgba(${curPal.rgb},.9)`:'rgba(255,255,255,.08)';
-  } else if(curVariant===7){
-    const ch=document.getElementById('barSegs').children,f=Math.round(pct*ch.length);
-    for(let i=0;i<ch.length;i++) ch[i].style.background=i<f?`rgba(${curPal.rgb},.85)`:'rgba(255,255,255,.08)';
-  } else if(curVariant===8){
-    document.getElementById('barFadeFill').style.width=(pct*100)+'%';
-  } else if(curVariant>=10 && curVariant<=14){
-    const el=document.getElementById('shProg'); if(!el)return;
-    const perim=parseFloat(svg.dataset.perim||'800');
-    el.style.strokeDashoffset=perim-(perim*pct);
-  }
+  if(!barUpdate)return;
+  barUpdate(progressPct);
 }
 
 /* ══ FX PARTICLES ══ */
@@ -372,7 +299,7 @@ function startFx(ei,rgb){
   stopFx();
   const cv=document.getElementById('fxCanvas'),ctx=cv.getContext('2d');
   cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;
-  const W=cv.width,H=cv.height,ACX=50+170,ACY=H/2;
+  const W=cv.width,H=cv.height,ACX=50+150,ACY=H/2;
   const E=[
     ()=>{const P=Array.from({length:55},()=>sp());function sp(){return{x:Math.random()*W,y:H+5,vy:-(Math.random()*.5+.2),vx:(Math.random()-.5)*.35,r:Math.random()*1.8+.5,life:0,max:110+Math.random()*90,wb:Math.random()*6,ws:.02,wa:.4};}return()=>{ctx.clearRect(0,0,W,H);P.forEach(s=>{s.life++;s.wb+=s.ws;s.x+=s.vx+Math.sin(s.wb)*s.wa;s.y+=s.vy;if(s.life>s.max||s.y<-8)Object.assign(s,sp());const p=s.life/s.max,a=p<.15?p/.15:p>.75?(1-p)/.25:1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a*.85})`;ctx.fill();ctx.beginPath();ctx.arc(s.x,s.y,s.r*3.5,0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a*.08})`;ctx.fill();});};},
     ()=>{const R=Array.from({length:6},(_,i)=>({ph:i/6}));let t=0;return()=>{ctx.clearRect(0,0,W,H);t+=.01;R.forEach(r=>{const p=(t*.28+r.ph)%1,rd=20+p*220,a=(1-p)*.22;ctx.beginPath();ctx.arc(ACX,ACY,rd,0,Math.PI*2);ctx.strokeStyle=`rgba(${rgb},${a})`;ctx.lineWidth=2.5-p*2;ctx.stroke();});};},
@@ -389,7 +316,7 @@ function startFx(ei,rgb){
   (function loop(){draw();fxRAF=requestAnimationFrame(loop);})();
 }
 
-/* ══ AUTH / PKCE ══ */
+/* ══ AUTH ══ */
 const SCOPE="user-read-currently-playing user-read-playback-state";
 const REDIR=window.location.origin+window.location.pathname;
 document.getElementById('redirectBox').textContent=REDIR;
@@ -409,26 +336,20 @@ async function getToken(){if(Date.now()<Number(ls.g('sp_exp'))-5000)return ls.g(
 /* ══ PLAYER ══ */
 let pollT=null,progT=null,state=null,q429=0,lastId=null;
 
-function showIdle(){
-  stopFx();hideAllBars();if(waveRAF){cancelAnimationFrame(waveRAF);waveRAF=null;}
-  G('artFrame').style.animationPlayState='paused';
-  G('nowPlayingCard').classList.remove('show');G('idleCard').classList.add('show');
-}
+function showIdle(){stopFx();if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}G('artFrame').style.animationPlayState='paused';G('nowPlayingCard').classList.remove('show');G('idleCard').classList.add('show');}
 
 function showTrack(data){
   G('idleCard').classList.remove('show');G('nowPlayingCard').classList.add('show');
-  const item=data.item;
-  const key=item.name+(item.artists[0]||{name:''}).name;
+  const item=data.item,key=item.name+(item.artists[0]||{name:''}).name;
   if(item.id!==lastId){
     lastId=item.id;
-    const p=applyPal(key);
-    const h=hash(key);
+    const p=applyPal(key),h=hash(key);
     startFx(h%10,p.rgb);
     setupBar(h%15,p);
   }
   G('artFrame').style.animationPlayState=data.is_playing?'running':'paused';
   const img=(item.album&&item.album.images||[])[0];
-  G('art').src=img?img.url:''; G('art').alt=item.name;
+  G('art').src=img?img.url:'';G('art').alt=item.name;
   G('trackName').textContent=item.name;
   G('artistName').textContent=item.artists.map(a=>a.name).join(', ');
   state={prog:data.progress_ms,dur:item.duration_ms,playing:data.is_playing,at:Date.now()};
@@ -447,26 +368,15 @@ async function fetchNow(){
   const tok=await getToken();if(!tok){showLogin('Tu sesión expiró.');return;}
   try{
     const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+tok}});
-    if(r.status===204){q429=0;showIdle();return;}
-    if(r.status===401){showLogin('Sesión expirada, conéctate de nuevo.');return;}
+    if(r.status===204){q429=0;showIdle();return;}if(r.status===401){showLogin('Sesión expirada.');return;}
     if(r.status===429){q429++;const w=Math.max(parseInt(r.headers.get('Retry-After')||'0',10),Math.min(20*Math.pow(2,q429-1),1800));if(pollT)clearInterval(pollT);setTimeout(startPolling,(w+1)*1000);return;}
-    q429=0;if(!r.ok){showIdle();return;}
-    const d=await r.json();if(!d||!d.item){showIdle();return;}
-    showTrack(d);
+    q429=0;if(!r.ok){showIdle();return;}const d=await r.json();if(!d||!d.item){showIdle();return;}showTrack(d);
   }catch(e){showIdle();}
 }
 
 function startPolling(){fetchNow();if(pollT)clearInterval(pollT);pollT=setInterval(fetchNow,1000);if(progT)clearInterval(progT);progT=setInterval(tickBar,500);}
 
-function showLogin(err){
-  stopFx();hideAllBars();if(waveRAF){cancelAnimationFrame(waveRAF);waveRAF=null;}
-  if(pollT)clearInterval(pollT);if(progT)clearInterval(progT);
-  G('nowPlayingCard').classList.remove('show');G('idleCard').classList.remove('show');
-  G('logoutWrap').style.display='none';G('setupScreen').style.display='block';
-  const id=ls.g('sp_cid');if(id)G('clientId').value=id;
-  if(err)showErr(err);
-}
-
+function showLogin(err){stopFx();if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}if(pollT)clearInterval(pollT);if(progT)clearInterval(progT);G('nowPlayingCard').classList.remove('show');G('idleCard').classList.remove('show');G('logoutWrap').style.display='none';G('setupScreen').style.display='block';const id=ls.g('sp_cid');if(id)G('clientId').value=id;if(err)showErr(err);}
 function showPlayer(){G('setupScreen').style.display='none';G('logoutWrap').style.display='block';startPolling();}
 
 async function init(){

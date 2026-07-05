@@ -82,7 +82,7 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 .artist-enter{animation:slideInUp .5s cubic-bezier(.34,1.56,.64,1) .08s both;}
 @keyframes slideInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes artPop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
-.art-pop{animation:artPop .55s cubic-bezier(.34,1.56,.64,1) both;}
+.art-pop{animation:vinylSpin var(--spin-dur,9s) linear infinite,artPop .55s cubic-bezier(.34,1.56,.64,1) both;}
 
 /* Idle */
 .idle-card{display:none;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text-lo);font-size:1.1rem;}
@@ -353,7 +353,11 @@ function startBPMPulse(){
 function setRotationByEnergy(energy){
   const dur=Math.max(4,Math.round(12-(energy*8)));
   const af=document.getElementById('artFrame');
-  if(af) af.style.animationDuration=dur+'s';
+  if(af){
+    af.style.setProperty('--spin-dur',dur+'s');
+    // When not in art-pop class, set directly
+    if(!af.classList.contains('art-pop')) af.style.animationDuration=dur+'s';
+  }
 }
 
 // 19: Burst explosion when song changes
@@ -553,11 +557,13 @@ async function fetchArtistInfo(artistId){
       // Entry animations
       G('artFrame').classList.remove('art-pop','shimmering');void G('artFrame').offsetWidth;
       G('artFrame').classList.add('art-pop');
+      setTimeout(()=>G('artFrame').classList.remove('art-pop'),600);
       setTimeout(()=>{G('artFrame').classList.add('shimmering');setTimeout(()=>G('artFrame').classList.remove('shimmering'),750);},300);
       G('trackName').classList.remove('track-enter');void G('trackName').offsetWidth;
       G('trackName').classList.add('track-enter');
       G('artistName').classList.remove('artist-enter');void G('artistName').offsetWidth;
       G('artistName').classList.add('artist-enter');
+      setTimeout(()=>{G('trackName').classList.remove('track-enter');G('artistName').classList.remove('artist-enter');},600);
       card.style.opacity='';
     },350);
   } else {
@@ -607,7 +613,7 @@ async function fetchNow(){
 }
 
 // Smart polling: 10s normal, 1s near end of song
-const POLL_NORMAL=10000, POLL_FAST=1000, END_THRESHOLD=20000;
+const POLL_NORMAL=3000, POLL_FAST=1000, END_THRESHOLD=10000;
 let pollMode='normal';
 
 function setPollingMode(mode){

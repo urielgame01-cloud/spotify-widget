@@ -449,7 +449,7 @@ async function refreshTok(){const body=new URLSearchParams({grant_type:'refresh_
 async function getToken(){if(Date.now()<Number(ls.g('sp_exp'))-5000)return ls.g('sp_at');return(await refreshTok())?ls.g('sp_at'):null;}
 
 /* ══ PLAYER ══ */
-let pollT=null,progT=null,state=null,q429=0,lastId=null;
+let pollT=null,progT=null,state=null,q429=0,lastId=null,isFetching=false,isWaiting=false;
 let pauseTimer=null, currentBPM=120, fxSpeedMult=1;
 
 // Fetch BPM from Spotify audio features
@@ -487,7 +487,14 @@ async function fetchArtistInfo(artistId){
   }catch(e){}
 }
 
-function showIdle(){stopFx();if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}G('artFrame').style.animationPlayState='paused';G('nowPlayingCard').classList.remove('show');G('idleCard').classList.add('show');}
+function showIdle(){
+  stopFx();
+  if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}
+  if(bpmPulseTimer){clearInterval(bpmPulseTimer);bpmPulseTimer=null;}
+  G('artFrame').style.animationPlayState='paused';
+  G('nowPlayingCard').classList.remove('show');
+  G('idleCard').classList.add('show');
+}
 
 function showTrack(data){
   const card=G('nowPlayingCard');
@@ -574,32 +581,94 @@ function tickBar(){
 }
 
 async function fetchNow(){
-  const tok=await getToken();if(!tok){showLogin('Tu sesión expiró.');return;}
+  if(isFetching||isWaiting)return; // guard: no concurrent requests
+  isFetching=true;
+  const tok=await getToken();if(!tok){isFetching=false;showLogin('Tu sesión expiró.');return;}
   try{
     const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+tok}});
     if(r.status===204){q429=0;showIdle();return;}if(r.status===401){showLogin('Sesión expirada.');return;}
     if(r.status===429){
       q429++;
+      isFetching=false;
+      isWaiting=true;
       const w=Math.max(parseInt(r.headers.get('Retry-After')||'0',10),Math.min(30*Math.pow(2,q429-1),3600));
       if(pollT){clearInterval(pollT);pollT=null;}
       if(progT){clearInterval(progT);progT=null;}
-      console.log(`Rate limited. Waiting ${w}s before retry.`);
-      setTimeout(startPolling,(w+1)*1000);
+      console.warn(`Spotify rate limit — waiting ${w}s`);
+      setTimeout(()=>{isWaiting=false;pollMode='normal';endFetchScheduled=false;startPolling();},(w+1)*1000);
       return;
     }
-    q429=0;if(!r.ok){showIdle();return;}const d=await r.json();if(!d||!d.item){showIdle();return;}showTrack(d);
-  }catch(e){showIdle();}
+    q429=0;
+    if(!r.ok){isFetching=false;showIdle();return;}
+    const d=await r.json();if(!d||!d.item){isFetching=false;showIdle();return;}
+    isFetching=false;
+    showTrack(d);
+  }catch(e){isFetching=false;showIdle();}
+}
+
+// Smart polling: 10s normal, 1s near end of song
+const POLL_NORMAL=10000, POLL_FAST=1000, END_THRESHOLD=20000;
+let pollMode='normal';
+
+function setPollingMode(mode){
+  if(pollMode===mode||isWaiting)return;
+  pollMode=mode;
+  if(pollT){clearInterval(pollT);pollT=null;}
+  const interval=mode==='fast'?POLL_FAST:POLL_NORMAL;
+  pollT=setInterval(fetchNow,interval);
 }
 
 function startPolling(){
   if(pollT){clearInterval(pollT);pollT=null;}
   if(progT){clearInterval(progT);progT=null;}
+  pollMode='normal';
+  isFetching=false;
   fetchNow();
-  pollT=setInterval(fetchNow,1000);
-  progT=setInterval(tickBar,500);
+  pollT=setInterval(fetchNow,POLL_NORMAL);
+  progT=setInterval(()=>{
+    tickBar();
+    checkSmartPoll();
+  },500);
 }
 
-function showLogin(err){stopFx();if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}if(pollT)clearInterval(pollT);if(progT)clearInterval(progT);G('nowPlayingCard').classList.remove('show');G('idleCard').classList.remove('show');G('logoutWrap').style.display='none';G('setupScreen').style.display='block';const id=ls.g('sp_cid');if(id)G('clientId').value=id;if(err)showErr(err);}
+// Called every 500ms — adjusts poll speed based on how close to end of song
+let endFetchScheduled=false;
+function checkSmartPoll(){
+  if(!state||!state.playing)return;
+  const elapsed=state.prog+(Date.now()-state.at);
+  const remaining=state.dur-elapsed;
+
+  // Near end: switch to fast polling
+  if(remaining<END_THRESHOLD&&remaining>0){
+    setPollingMode('fast');
+    // Schedule a single immediate fetch right when song should end
+    if(!endFetchScheduled&&remaining<3000){
+      endFetchScheduled=true;
+      setTimeout(()=>{
+        endFetchScheduled=false;
+        if(!isFetching&&!isWaiting) fetchNow();
+      },Math.max(0,remaining+200));
+    }
+  } else {
+    setPollingMode('normal');
+    endFetchScheduled=false;
+  }
+}
+
+function showLogin(err){
+  stopFx();
+  if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}
+  if(bpmPulseTimer){clearInterval(bpmPulseTimer);bpmPulseTimer=null;}
+  if(pollT){clearInterval(pollT);pollT=null;}
+  if(progT){clearInterval(progT);progT=null;}
+  isFetching=false; isWaiting=false; pollMode='normal'; endFetchScheduled=false;
+  G('nowPlayingCard').classList.remove('show');
+  G('idleCard').classList.remove('show');
+  G('logoutWrap').style.display='none';
+  G('setupScreen').style.display='block';
+  const id=ls.g('sp_cid');if(id)G('clientId').value=id;
+  if(err)showErr(err);
+}
 function showPlayer(){G('setupScreen').style.display='none';G('logoutWrap').style.display='block';startPolling();}
 
 async function init(){
@@ -612,6 +681,22 @@ async function init(){
 
 G('loginBtn').addEventListener('click',login);
 G('logoutLink').addEventListener('click',e=>{e.preventDefault();clearSess();showLogin();});
+
+// Page Visibility API — stop polling when tab is hidden
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    // Tab hidden: pause polling to save rate limit budget
+    if(pollT){clearInterval(pollT);pollT=null;}
+    if(progT){clearInterval(progT);progT=null;}
+    if(bpmPulseTimer){clearInterval(bpmPulseTimer);bpmPulseTimer=null;}
+  } else {
+    // Tab visible again: resume only if logged in and not waiting for 429
+    if(!isWaiting && (G('nowPlayingCard').classList.contains('show') || G('idleCard').classList.contains('show'))){
+      startPolling();
+    }
+  }
+});
+
 init();
 })();
 </script>

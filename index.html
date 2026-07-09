@@ -81,17 +81,17 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 .track .text-piece,.artist .text-piece{display:inline-block;white-space:pre;position:relative;will-change:transform,opacity,filter;transform-origin:center;}
 .text-ready .text-piece{opacity:0;}
 .text-animate .text-piece{animation-fill-mode:both;}
-.text-typing .text-piece{animation:typingPiece .46s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.035s);}
-.text-rhythmic .text-piece{animation:rhythmicPiece .8s ease-in-out both;animation-delay:calc(var(--i)*.022s);}
-.text-bounce .text-piece{animation:bouncePiece .72s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i)*.028s);}
-.text-rotation .text-piece{animation:rotationPiece .72s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.03s);}
-.text-zoom .text-piece{animation:zoomPiece .7s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.025s);}
-.text-wave .text-piece{animation:wavePiece .74s ease both;animation-delay:calc(var(--i)*.025s);}
-.text-glitch .text-piece{animation:glitchPiece .62s steps(2,end) both;animation-delay:calc(var(--i)*.02s);}
-.track.text-lateral-left .text-piece{animation:lateralLeftPiece .72s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i)*.03s);}
-.artist.text-lateral-right .text-piece{animation:lateralRightPiece .72s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i)*.03s);}
-.text-mirror .text-piece{animation:mirrorPiece .78s ease both;animation-delay:calc(var(--i)*.028s);}
-.text-fragment .text-piece{animation:fragmentPiece .76s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.024s);}
+.text-typing .text-piece{animation:typingPiece .72s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.045s);}
+.text-rhythmic .text-piece{animation:rhythmicPiece 1s ease-in-out both;animation-delay:calc(var(--i)*.03s);}
+.text-bounce .text-piece{animation:bouncePiece .95s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i)*.036s);}
+.text-rotation .text-piece{animation:rotationPiece .95s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.038s);}
+.text-zoom .text-piece{animation:zoomPiece .9s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.032s);}
+.text-wave .text-piece{animation:wavePiece .95s ease both;animation-delay:calc(var(--i)*.032s);}
+.text-glitch .text-piece{animation:glitchPiece .8s steps(2,end) both;animation-delay:calc(var(--i)*.026s);}
+.track.text-lateral-left .text-piece{animation:lateralLeftPiece .95s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i)*.038s);}
+.artist.text-lateral-right .text-piece{animation:lateralRightPiece .95s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i)*.038s);}
+.text-mirror .text-piece{animation:mirrorPiece 1s ease both;animation-delay:calc(var(--i)*.036s);}
+.text-fragment .text-piece{animation:fragmentPiece .95s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*.03s);}
 @keyframes driftA{0%{background-position:0%}50%{background-position:240%}100%{background-position:480%}}
 @keyframes breatheA{0%,100%{opacity:.72;letter-spacing:0}50%{opacity:1;letter-spacing:.03em}}
 @keyframes typingPiece{0%{opacity:0;transform:translateY(8px) scale(.95);}100%{opacity:1;transform:translateY(0) scale(1);}}

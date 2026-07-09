@@ -628,47 +628,6 @@ async function fetchBPM(trackId){
   }catch(e){}
 }
 
-// 14: Fetch artist popularity, followers and popularity stars
-async function fetchArtistData(artistId, fallbackPopularity=0){
-  const tok=await getToken();if(!tok)return;
-  try{
-    const r=await fetch(`https://api.spotify.com/v1/artists/${artistId}`,{headers:{Authorization:'Bearer '+tok}});
-    if(!r.ok)return;
-    const d=await r.json();
-    if(currentArtistId!==artistId) return;
-    if(!d)return;
-    const followers=d.followers?.total || 0;
-    const fmt=followers>=1000000?`${(followers/1000000).toFixed(1)}M`
-      :followers>=1000?`${(followers/1000).toFixed(0)}K`
-      :followers?`${followers}`:'';
-    let pop=typeof d.popularity==='number'?d.popularity:0;
-    if(pop===0 && fallbackPopularity>0) pop=fallbackPopularity;
-    const stars='🔥'.repeat(Math.max(1,Math.round(pop/20)));
-    const badge=G('followersBadge');
-    if(badge){
-      if(followers){
-        badge.textContent=`${fmt} seguidores`;
-        badge.style.opacity='1';
-      } else if(pop){
-        badge.textContent='Popularidad disponible';
-        badge.style.opacity='0.8';
-      } else {
-        badge.textContent='';
-        badge.style.opacity='0';
-      }
-    }
-    const meta=G('artistMeta');
-    if(meta){
-      meta.textContent=followers
-        ? `${fmt} seguidores · Popularidad ${pop}/100 ${stars}`
-        : pop
-          ? `Popularidad ${pop}/100 ${stars}`
-          : 'Popularidad no disponible';
-      meta.style.opacity='1';
-    }
-  }catch(e){}
-}
-
 function showIdle(){
   stopFx();
   if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}

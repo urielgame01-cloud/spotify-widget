@@ -722,7 +722,7 @@ function showTrack(data){
     card.style.opacity='0';
     setTimeout(()=>{
       const p=applyPal(key),h=hash(key);
-      startFx(h % E.length,p.rgb);
+      startFx(h,p.rgb);
       setupBar(h % BARS.length,p);
       setTimeout(()=>{triggerBurst(p.rgb);triggerShimmer();},300);
       showToast(item.name, item.artists.map(a=>a.name).join(', ')); // 08: toast

@@ -51,10 +51,8 @@ button:hover{transform:translateY(-1px);opacity:.9;}
   letter-spacing:-.025em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:inline-block;width:100%;
-  background:linear-gradient(90deg,#ff4d6d,#ffb347,#ff3d8f,#ffb347,#ff4d6d);
-  background-size:650% auto;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:driftT 14s linear infinite,breatheT 4.5s ease-in-out infinite,floatX 10s ease-in-out infinite;
+  color:var(--text-hi);
+  transition:color 4s ease, opacity .8s ease;
 }
 @keyframes driftT{0%{background-position:0%}50%{background-position:200%}100%{background-position:400%}}
 @keyframes breatheT{0%,100%{opacity:.82;filter:brightness(1);letter-spacing:0}50%{opacity:1;filter:brightness(1.3);letter-spacing:.04em}}
@@ -64,10 +62,8 @@ button:hover{transform:translateY(-1px);opacity:.9;}
   letter-spacing:-.02em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:inline-block;width:100%;
-  background:linear-gradient(90deg,#7c3aed,#ff3d8f,#ffb347,#7c3aed);
-  background-size:600% auto;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:driftA 18s linear infinite,breatheA 5.5s ease-in-out infinite,floatX 12s ease-in-out infinite;
+  color:rgba(243,238,248,.96);
+  transition:color 4s ease, opacity .8s ease;
 }
 @keyframes driftA{0%{background-position:0%}50%{background-position:240%}100%{background-position:480%}}
 @keyframes breatheA{0%,100%{opacity:.72;letter-spacing:0}50%{opacity:1;letter-spacing:.03em}}
@@ -124,8 +120,6 @@ button:hover{transform:translateY(-1px);opacity:.9;}
   <div class="meta">
     <div class="track-wrap"><div class="track" id="trackName">—</div></div>
     <div class="artist" id="artistName">—</div>
-    <div id="followersBadge" style="font-size:.95rem;color:rgba(255,255,255,.82);margin-bottom:16px;opacity:0;transition:opacity 1s ease,color .4s ease;font-weight:600;letter-spacing:.02em;"></div>
-    <div id="artistMeta" style="font-size:.95rem;color:rgba(255,255,255,.72);margin-bottom:16px;letter-spacing:.02em;min-height:1.2em;opacity:0;transition:opacity 1s ease;"></div>
     <div id="barWrap"></div>
   </div>
 </div>
@@ -169,8 +163,10 @@ function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0
 let curPal=PAL[0];
 function applyPal(key){
   const p=PAL[hash(key)%PAL.length]; curPal=p;
-  document.getElementById('trackName').style.backgroundImage='linear-gradient(90deg,'+p.t.join(',')+')';
-  document.getElementById('artistName').style.backgroundImage='linear-gradient(90deg,'+p.a.join(',')+')';
+  const trackEl=document.getElementById('trackName');
+  const artistEl=document.getElementById('artistName');
+  if(trackEl) trackEl.style.color=p.c1;
+  if(artistEl) artistEl.style.color=p.c2;
   // 16: Update aura color
   const aura=document.getElementById('artAura');
   if(aura) aura.style.boxShadow=`0 0 60px 30px rgba(${p.rgb},.25), 0 0 120px 60px rgba(${p.rgb},.1)`;
@@ -183,16 +179,16 @@ let curVariant=-1, barRAF=null, progressPct=0;
 const BARS=[
   // 0: Centro → ambos lados
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
-      <div id="bL" style="position:absolute;right:50%;top:0;height:100%;width:0%;border-radius:2px 0 0 2px;background:linear-gradient(90deg,${p.c1},${p.c2});"></div>
-      <div id="bR" style="position:absolute;left:50%;top:0;height:100%;width:0%;border-radius:0 2px 2px 0;background:linear-gradient(90deg,${p.c2},${p.c1});"></div>
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
+      <div id="bL" style="position:absolute;right:50%;top:0;height:100%;width:0%;border-radius:3px 0 0 3px;background:linear-gradient(90deg,${p.c1},${p.c2});"></div>
+      <div id="bR" style="position:absolute;left:50%;top:0;height:100%;width:0%;border-radius:0 3px 3px 0;background:linear-gradient(90deg,${p.c2},${p.c1});"></div>
     </div>`;
     return pct=>{const h=pct*50;document.getElementById('bL').style.width=h+'%';document.getElementById('bR').style.width=h+'%';};
   },
   // 1: Clásica izq→der
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;">
-      <div id="bC" style="height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,${p.c1},${p.c2},${p.c1});transition:width .3s linear;"></div>
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;">
+      <div id="bC" style="height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,${p.c1},${p.c2},${p.c1});transition:width .3s linear;"></div>
     </div>`;
     return pct=>{document.getElementById('bC').style.width=(pct*100)+'%';};
   },
@@ -225,23 +221,23 @@ const BARS=[
   },
   // 5: Fade desde izquierda (desvanecimiento)
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:3px;border-radius:2px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;">
-      <div id="bF" style="position:absolute;left:0;top:0;height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,rgba(${p.rgb},0),rgba(${p.rgb},1));"></div>
+    wrap.innerHTML=`<div style="height:5px;border-radius:3px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;">
+      <div id="bF" style="position:absolute;left:0;top:0;height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,rgba(${p.rgb},0),rgba(${p.rgb},1));"></div>
     </div>`;
     return pct=>{document.getElementById('bF').style.width=(pct*100)+'%';};
   },
   // 6: Doble línea
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px;">
-      <div style="height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden;"><div id="bD1" style="height:100%;width:0%;background:rgba(${p.rgb},1);border-radius:2px;"></div></div>
-      <div style="height:2px;border-radius:1px;background:rgba(255,255,255,.05);overflow:hidden;"><div id="bD2" style="height:100%;width:0%;background:rgba(${p.rgb},.5);border-radius:1px;transition:width .3s linear;"></div></div>
+    wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:5px;">
+      <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;"><div id="bD1" style="height:100%;width:0%;background:rgba(${p.rgb},1);border-radius:3px;"></div></div>
+      <div style="height:3px;border-radius:2px;background:rgba(255,255,255,.05);overflow:hidden;"><div id="bD2" style="height:100%;width:0%;background:rgba(${p.rgb},.5);border-radius:2px;transition:width .3s linear;"></div></div>
     </div>`;
     return pct=>{document.getElementById('bD1').style.width=(pct*100)+'%';document.getElementById('bD2').style.width=(pct*100)+'%';};
   },
   // 7: Línea con pulso de brillo
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
-      <div id="bP" style="height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,${p.c1},${p.c2});position:relative;"></div>
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
+      <div id="bP" style="height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,${p.c1},${p.c2});position:relative;"></div>
       <div id="bPulse" style="position:absolute;top:0;height:100%;width:30px;background:rgba(255,255,255,.4);transform:skewX(-20deg);filter:blur(3px);"></div>
     </div>`;
     return pct=>{
@@ -267,8 +263,8 @@ const BARS=[
   },
   // 9: Guiones punteados llenándose
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;">
-      <div id="bDash" style="height:100%;width:0%;background:repeating-linear-gradient(90deg,rgba(${p.rgb},1) 0px,rgba(${p.rgb},1) 8px,transparent 8px,transparent 14px);border-radius:2px;"></div>
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;">
+      <div id="bDash" style="height:100%;width:0%;background:repeating-linear-gradient(90deg,rgba(${p.rgb},1) 0px,rgba(${p.rgb},1) 10px,transparent 10px,transparent 18px);border-radius:3px;"></div>
     </div>`;
     return pct=>{document.getElementById('bDash').style.width=(pct*100)+'%';};
   },
@@ -313,39 +309,39 @@ const BARS=[
   },
   // 14: Círculos concéntricos (radial fill)
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
-      <div id="bRad" style="position:absolute;left:0;top:0;height:100%;width:0%;background:conic-gradient(rgba(${p.rgb},1) 0deg, rgba(${p.rgb},.6) 90deg, rgba(${p.rgb},1) 180deg, rgba(${p.rgb},.6) 270deg, rgba(${p.rgb},1) 360deg);border-radius:2px;"></div>
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;">
+      <div id="bRad" style="position:absolute;left:0;top:0;height:100%;width:0%;background:conic-gradient(rgba(${p.rgb},1) 0deg, rgba(${p.rgb},.6) 90deg, rgba(${p.rgb},1) 180deg, rgba(${p.rgb},.6) 270deg, rgba(${p.rgb},1) 360deg);border-radius:3px;"></div>
     </div>`;
     return pct=>{document.getElementById('bRad').style.width=(pct*100)+'%';};
   },
   // 15: Centro espejo — ambas direcciones
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="display:flex;gap:6px;"><div style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCL" style="position:absolute;right:50%;top:0;height:100%;width:0%;background:linear-gradient(270deg,${p.c2},${p.c1});border-radius:2px 0 0 2px;"></div></div><div style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCR" style="position:absolute;left:50%;top:0;height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});border-radius:0 2px 2px 0;"></div></div></div>`;
+    wrap.innerHTML=`<div style="display:flex;gap:6px;"><div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCL" style="position:absolute;right:50%;top:0;height:100%;width:0%;background:linear-gradient(270deg,${p.c2},${p.c1});border-radius:3px 0 0 3px;"></div></div><div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCR" style="position:absolute;left:50%;top:0;height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});border-radius:0 3px 3px 0;"></div></div></div>`;
     return pct=>{const w=pct*50;document.getElementById('bCL').style.width=w+'%';document.getElementById('bCR').style.width=w+'%';};
   },
   // 16: Desde el centro hacia la derecha
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCR2" style="position:absolute;left:50%;top:0;height:100%;width:0%;border-radius:0 2px 2px 0;background:linear-gradient(90deg,${p.c1},${p.c2});"></div></div>`;
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCR2" style="position:absolute;left:50%;top:0;height:100%;width:0%;border-radius:0 3px 3px 0;background:linear-gradient(90deg,${p.c1},${p.c2});"></div></div>`;
     return pct=>{document.getElementById('bCR2').style.width=(pct*50)+'%';};
   },
   // 17: Desde el centro hacia la izquierda
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCL2" style="position:absolute;right:50%;top:0;height:100%;width:0%;border-radius:2px 0 0 2px;background:linear-gradient(270deg,${p.c2},${p.c1});"></div></div>`;
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCL2" style="position:absolute;right:50%;top:0;height:100%;width:0%;border-radius:3px 0 0 3px;background:linear-gradient(270deg,${p.c2},${p.c1});"></div></div>`;
     return pct=>{document.getElementById('bCL2').style.width=(pct*50)+'%';};
   },
   // 18: Doble línea central intensa
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;"><div style="height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden;"><div id="bM1" style="height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});transition:width .2s ease;"></div></div><div style="height:3px;border-radius:2px;background:rgba(255,255,255,.05);overflow:hidden;"><div id="bM2" style="height:100%;width:0%;background:linear-gradient(90deg,${p.c2},${p.c1});transition:width .3s ease;"></div></div></div>`;
+    wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px;"><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;"><div id="bM1" style="height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});transition:width .2s ease;"></div></div><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.05);overflow:hidden;"><div id="bM2" style="height:100%;width:0%;background:linear-gradient(90deg,${p.c2},${p.c1});transition:width .3s ease;"></div></div></div>`;
     return pct=>{document.getElementById('bM1').style.width=(pct*100)+'%';document.getElementById('bM2').style.width=(pct*100)+'%';};
   },
   // 19: Pulso de rayo
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.03);position:relative;overflow:hidden;"><div id="bR" style="position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});box-shadow:0 0 12px rgba(${p.rgb},.45);"></div><div id="bPulse2" style="position:absolute;top:0;left:0;height:100%;width:20px;background:rgba(255,255,255,.25);filter:blur(4px);"></div></div>`;
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.03);position:relative;overflow:hidden;"><div id="bR" style="position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});box-shadow:0 0 12px rgba(${p.rgb},.45);"></div><div id="bPulse2" style="position:absolute;top:0;left:0;height:100%;width:24px;background:rgba(255,255,255,.25);filter:blur(4px);"></div></div>`;
     return pct=>{const w=pct*100;document.getElementById('bR').style.width=w+'%';document.getElementById('bPulse2').style.left=Math.min(Math.max(w-10,0),90)+'%';};
   },
   // 20: Reversa derecha → izquierda
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bRB" style="position:absolute;right:0;top:0;height:100%;width:0%;border-radius:0 2px 2px 0;background:linear-gradient(270deg,${p.c1},${p.c2});"></div></div>`;
+    wrap.innerHTML=`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bRB" style="position:absolute;right:0;top:0;height:100%;width:0%;border-radius:0 3px 3px 0;background:linear-gradient(270deg,${p.c1},${p.c2});"></div></div>`;
     return pct=>{document.getElementById('bRB').style.width=(pct*100)+'%';};
   },
   // 21: Cuadrados pop
@@ -364,7 +360,7 @@ const BARS=[
   },
   // 23: Centro + bordes activos
   (wrap,p)=>{
-    wrap.innerHTML=`<div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:4px;border-radius:2px;background:rgba(255,255,255,.08);"></div><div style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCL3" style="position:absolute;left:50%;top:0;height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});border-radius:0 2px 2px 0;"></div><div id="bCR3" style="position:absolute;right:50%;top:0;height:100%;width:0%;background:linear-gradient(270deg,${p.c2},${p.c1});border-radius:2px 0 0 2px;"></div></div><div style="width:10px;height:4px;border-radius:2px;background:rgba(255,255,255,.08);"></div></div>`;
+    wrap.innerHTML=`<div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:6px;border-radius:3px;background:rgba(255,255,255,.08);"></div><div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;position:relative;"><div id="bCL3" style="position:absolute;left:50%;top:0;height:100%;width:0%;background:linear-gradient(90deg,${p.c1},${p.c2});border-radius:0 3px 3px 0;"></div><div id="bCR3" style="position:absolute;right:50%;top:0;height:100%;width:0%;background:linear-gradient(270deg,${p.c2},${p.c1});border-radius:3px 0 0 3px;"></div></div><div style="width:10px;height:6px;border-radius:3px;background:rgba(255,255,255,.08);"></div></div>`;
     return pct=>{const w=pct*50;document.getElementById('bCL3').style.width=w+'%';document.getElementById('bCR3').style.width=w+'%';};
   },
   // 24: Puntos iluminados escalonados
@@ -701,22 +697,7 @@ function showTrack(data){
     lastId=item.id;
     currentTrackId=item.id;
     currentArtistId=item.artists&&item.artists[0]?item.artists[0].id:null;
-    const trackPopularity = typeof item.popularity === 'number' ? item.popularity : 0;
-    const meta=G('artistMeta');
-    if(meta){
-      if(trackPopularity){
-        meta.textContent=`Popularidad ${trackPopularity}/100 ${'🔥'.repeat(Math.max(1,Math.round(trackPopularity/20)))}`;
-        meta.style.opacity='1';
-      } else {
-        meta.textContent='Popularidad no disponible';
-        meta.style.opacity='0.6';
-      }
-    }
     fetchBPM(item.id); // async, non-blocking
-    const badge=document.getElementById('followersBadge');
-    if(badge){badge.style.opacity='0';badge.textContent='';}
-    if(currentArtistId) fetchArtistData(currentArtistId, trackPopularity);
-
 
 // Crossfade: fade out → update → fade in
     card.style.opacity='0';

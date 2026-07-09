@@ -27,6 +27,7 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 .card{display:none;position:relative;width:1600px;height:400px;overflow:hidden;align-items:center;padding:0 80px 0 50px;}
 .card.show{display:flex;}
 #fxCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+#burstCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;}
 
 /* Vinyl zone */
 .vinyl-zone{position:relative;width:300px;height:300px;flex-shrink:0;z-index:2;display:flex;align-items:center;justify-content:center;}
@@ -35,11 +36,8 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 .art-frame.paused{animation-play-state:paused;}
 @keyframes vinylSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .art{width:100%;height:100%;object-fit:cover;background:#1a0d2b;display:block;}
-.shimmer-overlay{position:absolute;inset:0;border-radius:50%;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:200% 100%;z-index:3;pointer-events:none;opacity:0;}
-.shimmer-overlay.active{animation:shimmerSwipe .7s ease forwards;}
-@keyframes shimmerSwipe{0%{opacity:0;background-position:200% 0}40%{opacity:1}100%{opacity:0;background-position:-200% 0}}
 .art-shimmer{position:absolute;inset:0;border-radius:50%;background:linear-gradient(105deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.55) 50%,rgba(255,255,255,0) 70%);background-size:300% 100%;opacity:0;pointer-events:none;z-index:5;}
-.art-frame.shimmering .art-shimmer{animation:shimmerSlide .7s ease-out forwards;}
+.art-frame.shimmering .art-shimmer,.art-shimmer.active{animation:shimmerSlide .7s ease-out forwards;}
 @keyframes shimmerSlide{0%{opacity:0;background-position:120% 0}40%{opacity:1}100%{opacity:0;background-position:-20% 0}}
 .vinyl-hole{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.15),rgba(0,0,0,.5));z-index:4;}
 .aura{position:absolute;width:260px;height:260px;border-radius:50%;z-index:0;pointer-events:none;transition:box-shadow 2s ease,background 2s ease,transform .12s ease;animation:auraPulse 4s ease-in-out infinite;}
@@ -86,6 +84,8 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 @keyframes fadeInTrack{from{opacity:0}to{opacity:1}}
 @keyframes artPop{from{opacity:0}to{opacity:1}}
 .art-pop{animation:vinylSpin 9s linear infinite,artPop .4s ease both;}
+.track.scrolling,.artist.scrolling{animation:marquee var(--scroll-dur) linear infinite;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(var(--scroll-dist));}}
 
 /* Idle */
 .idle-card{display:none;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text-lo);font-size:1.1rem;}
@@ -113,9 +113,10 @@ button:hover{transform:translateY(-1px);opacity:.9;}
 
 <div class="card" id="nowPlayingCard">
   <canvas id="fxCanvas"></canvas>
+  <canvas id="burstCanvas"></canvas>
   <div class="vinyl-zone">
-    <div id="artAura"></div>
-    <div class="art-frame" id="artFrame"><img class="art" id="art" src="" alt=""/><div class="art-shimmer"></div></div>
+    <div id="artAura" class="aura"></div>
+    <div class="art-frame" id="artFrame"><img class="art" id="art" src="" alt=""/><div id="shimmer" class="art-shimmer"></div></div>
     <div class="vinyl-hole"></div>
   </div>
   <div class="meta">
@@ -162,7 +163,7 @@ function applyPal(key){
   document.getElementById('trackName').style.backgroundImage='linear-gradient(90deg,'+p.t.join(',')+')';
   document.getElementById('artistName').style.backgroundImage='linear-gradient(90deg,'+p.a.join(',')+')';
   // 16: Update aura color
-  const aura=document.getElementById('aura');
+  const aura=document.getElementById('artAura');
   if(aura) aura.style.boxShadow=`0 0 60px 30px rgba(${p.rgb},.25), 0 0 120px 60px rgba(${p.rgb},.1)`;
   return p;
 }
@@ -344,7 +345,7 @@ function startBPMPulse(){
   if(bpmPulseTimer)clearInterval(bpmPulseTimer);
   if(!currentBPM||currentBPM<40)return;
   const interval=Math.round(60000/currentBPM);
-  const aura=document.getElementById('aura');
+  const aura=document.getElementById('artAura');
   const art=document.getElementById('artFrame');
   bpmPulseTimer=setInterval(()=>{
     if(aura){aura.style.transform='scale(1.08)';setTimeout(()=>{aura.style.transform='';},120);}
@@ -471,7 +472,7 @@ function startFx(ei,rgb){
     // 24: Paint splatter — manchas de pintura
     ()=>{const S=Array.from({length:40},()=>mkS());function mkS(){const a=Math.random()*Math.PI*2;const spd=Math.random()*4+1;return{x:ACX,y:ACY,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,r:Math.random()*10+3,life:0,max:60+Math.random()*40,trail:[]};}return()=>{ctx.clearRect(0,0,W,H);S.forEach(s=>{s.life++;s.x+=s.vx;s.y+=s.vy;s.vy+=.08;s.vx*=.98;s.trail.push({x:s.x,y:s.y});if(s.trail.length>8)s.trail.shift();if(s.life>s.max)Object.assign(s,mkS());const p=s.life/s.max,a=(1-p)*.85;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1-p*.5),0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a})`;ctx.fill();s.trail.forEach((pt,i)=>{ctx.beginPath();ctx.arc(pt.x,pt.y,s.r*.4*(i/s.trail.length),0,Math.PI*2);ctx.fillStyle=`rgba(${rgb},${a*i/s.trail.length*.3})`;ctx.fill();});});};},
   ];
-  const draw=E[ei%10]();
+  const draw=E[ei % E.length]();
   (function loop(){draw();fxRAF=requestAnimationFrame(loop);})();
 }
 
@@ -495,6 +496,7 @@ async function getToken(){if(Date.now()<Number(ls.g('sp_exp'))-5000)return ls.g(
 /* ══ PLAYER ══ */
 let pollT=null,progT=null,state=null,q429=0,lastId=null,isFetching=false,isWaiting=false;
 let pauseTimer=null, currentBPM=120, fxSpeedMult=1;
+let currentArtistId=null, currentTrackId=null;
 
 // Fetch BPM from Spotify audio features
 async function fetchBPM(trackId){
@@ -503,6 +505,7 @@ async function fetchBPM(trackId){
     const r=await fetch(`https://api.spotify.com/v1/audio-features/${trackId}`,{headers:{Authorization:'Bearer '+tok}});
     if(!r.ok)return;
     const d=await r.json();
+    if(currentTrackId!==trackId) return;
     if(d&&d.tempo){
       currentBPM=d.tempo;
       fxSpeedMult=Math.max(0.4,Math.min(2.2,(d.tempo-60)/120+0.8));
@@ -514,20 +517,25 @@ async function fetchBPM(trackId){
   }catch(e){}
 }
 
-// 14: Fetch artist popularity/followers
-async function fetchArtistInfo(artistId){
+// 14: Fetch artist popularity, followers and popularity stars
+async function fetchArtistData(artistId){
   const tok=await getToken();if(!tok)return;
   try{
     const r=await fetch(`https://api.spotify.com/v1/artists/${artistId}`,{headers:{Authorization:'Bearer '+tok}});
     if(!r.ok)return;
     const d=await r.json();
-    if(d&&d.followers){
-      const followers=d.followers.total;
-      const fmt=followers>=1000000?`${(followers/1000000).toFixed(1)}M`
-        :followers>=1000?`${(followers/1000).toFixed(0)}K`:followers;
-      const el=document.getElementById('followersBadge');
-      if(el){el.textContent=`${fmt} seguidores`;el.style.opacity='1';}
-    }
+    if(currentArtistId!==artistId) return;
+    if(!d)return;
+    const followers=d.followers?.total || 0;
+    const fmt=followers>=1000000?`${(followers/1000000).toFixed(1)}M`
+      :followers>=1000?`${(followers/1000).toFixed(0)}K`
+      :followers?`${followers}`:'';
+    const pop=d.popularity||0;
+    const stars='🔥'.repeat(Math.round(pop/25));
+    const badge=G('followersBadge');
+    if(badge){badge.textContent=followers?`${fmt} seguidores`:'';badge.style.opacity=followers?'1':'0';}
+    const meta=G('artistMeta');
+    if(meta){meta.textContent=followers?`${fmt} seguidores · ${stars} ${pop}/100`:`${stars} ${pop}/100`;}
   }catch(e){}
 }
 
@@ -557,27 +565,13 @@ function showTrack(data){
 
   if(isNewTrack){
     lastId=item.id;
+    currentTrackId=item.id;
+    currentArtistId=item.artists&&item.artists[0]?item.artists[0].id:null;
     fetchBPM(item.id); // async, non-blocking
-    if(item.artists&&item.artists[0]) fetchArtistInfo(item.artists[0].id);
     const badge=document.getElementById('followersBadge');
     if(badge){badge.style.opacity='0';badge.textContent='';}
-    if(item.artists&&item.artists[0]) fetchArtistInfo(item.artists[0].id);
+    if(currentArtistId) fetchArtistData(currentArtistId);
 
-    // Fetch artist info (popularity + followers)
-async function fetchArtistInfo(artistId){
-  const tok=await getToken();if(!tok)return;
-  try{
-    const r=await fetch(`https://api.spotify.com/v1/artists/${artistId}`,{headers:{Authorization:'Bearer '+tok}});
-    if(!r.ok)return;
-    const d=await r.json();
-    if(d){
-      const followers=d.followers&&d.followers.total?new Intl.NumberFormat().format(d.followers.total):'';
-      const pop=d.popularity||0;
-      const stars='🔥'.repeat(Math.round(pop/25));
-      G('artistMeta').textContent=followers?`${followers} seguidores · ${stars} ${pop}/100`:'';
-    }
-  }catch(e){}
-}
 
 // Crossfade: fade out → update → fade in
     card.style.opacity='0';
@@ -662,7 +656,7 @@ async function fetchNow(){
   const tok=await getToken();if(!tok){isFetching=false;showLogin('Tu sesión expiró.');return;}
   try{
     const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+tok}});
-    if(r.status===204){q429=0;showIdle();return;}if(r.status===401){showLogin('Sesión expirada.');return;}
+    if(r.status===204){q429=0;isFetching=false;showIdle();return;}if(r.status===401){isFetching=false;showLogin('Sesión expirada.');return;}
     if(r.status===429){
       q429++;
       isFetching=false;
@@ -683,7 +677,7 @@ async function fetchNow(){
 }
 
 // Smart polling: 10s normal, 1s near end of song
-const POLL_NORMAL=1000, POLL_FAST=1000, END_THRESHOLD=10000;
+const POLL_NORMAL=10000, POLL_FAST=1000, END_THRESHOLD=10000;
 let pollMode='normal';
 
 function setPollingMode(mode){

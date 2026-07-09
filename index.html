@@ -213,6 +213,20 @@ const PAL=[
 function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
 
 let curPal=PAL[0];
+function getCanvasContext(id){
+  const canvas=document.getElementById(id);
+  if(!canvas)return null;
+  try{
+    const ctx=canvas.getContext('2d');
+    return ctx?{canvas,ctx}:null;
+  }catch(err){
+    console.warn(`Canvas ${id} unavailable`, err);
+    return null;
+  }
+}
+function runSafe(fn,label){
+  try{fn();}catch(err){console.warn(label,err);}
+}
 function applyPal(key){
   const p=PAL[hash(key)%PAL.length]; curPal=p;
   const trackEl=document.getElementById('trackName');
@@ -227,11 +241,12 @@ function applyPal(key){
 }
 
 let textEffectIndex=0;
+let textRenderVersion=0;
 const TEXT_EFFECTS=['typing','rhythmic','bounce','rotation','zoom','wave','glitch','lateral','mirror','fragment'];
 function renderTextEffect(el,text,effect,kind){
   if(!el)return;
-  el.classList.remove('text-ready','text-animate','text-typing','text-rhythmic','text-bounce','text-rotation','text-zoom','text-wave','text-glitch','text-lateral-left','text-lateral-right','text-mirror','text-fragment');
   const safeText=text&&text.trim()?text:'—';
+  el.classList.remove('text-ready','text-animate','text-typing','text-rhythmic','text-bounce','text-rotation','text-zoom','text-wave','text-glitch','text-lateral-left','text-lateral-right','text-mirror','text-fragment');
   el.dataset.rawText=safeText;
   el.innerHTML='';
   const chars=Array.from(safeText);
@@ -246,22 +261,27 @@ function renderTextEffect(el,text,effect,kind){
   el.appendChild(frag);
   el.classList.add('text-ready');
   el.classList.add(`text-${effect}`);
-  if(kind==='track')el.classList.add('text-lateral-left');
-  if(kind==='artist')el.classList.add('text-lateral-right');
   if(effect==='lateral'){
-    el.classList.remove('text-lateral-left','text-lateral-right');
     if(kind==='track')el.classList.add('text-lateral-left');
     if(kind==='artist')el.classList.add('text-lateral-right');
   }
   void el.offsetWidth;
   el.classList.add('text-animate');
 }
-function applyTextEffects(trackEl, artistEl){
+function applyTextEffects(trackText, artistText){
+  const trackEl=document.getElementById('trackName');
+  const artistEl=document.getElementById('artistName');
   if(!trackEl && !artistEl)return '';
   const effect=TEXT_EFFECTS[textEffectIndex%TEXT_EFFECTS.length];
   textEffectIndex=(textEffectIndex+1)%TEXT_EFFECTS.length;
-  renderTextEffect(trackEl, trackEl?.dataset?.rawText || trackEl?.textContent || '—', effect, 'track');
-  renderTextEffect(artistEl, artistEl?.dataset?.rawText || artistEl?.textContent || '—', effect, 'artist');
+  const trackValue=trackText&&trackText.trim()?trackText:'—';
+  const artistValue=artistText&&artistText.trim()?artistText:'—';
+  const renderVersion=++textRenderVersion;
+  requestAnimationFrame(()=>{
+    if(renderVersion!==textRenderVersion)return;
+    renderTextEffect(trackEl, trackValue, effect, 'track');
+    renderTextEffect(artistEl, artistValue, effect, 'artist');
+  });
   return effect;
 }
 
@@ -468,10 +488,17 @@ let barUpdate=null;
 function setupBar(idx,p){
   if(barRAF){cancelAnimationFrame(barRAF);barRAF=null;}
   const wrap=document.getElementById('barWrap');
+  if(!wrap)return;
   wrap.innerHTML='';
   curVariant=idx;
-  barUpdate=BARS[idx%BARS.length](wrap,p)||null;
-  if(barUpdate) barUpdate(progressPct);
+  try{
+    barUpdate=BARS[idx%BARS.length](wrap,p)||null;
+    if(barUpdate) barUpdate(progressPct);
+  }catch(err){
+    console.warn('Bar setup failed', err);
+    wrap.innerHTML='<div style="height:6px;border-radius:3px;background:rgba(255,255,255,.12);"></div>';
+    barUpdate=null;
+  }
 }
 function updateBar(){
   if(!barUpdate)return;
@@ -535,10 +562,11 @@ function setRotationByEnergy(energy){
 
 // 19: Burst explosion when song changes
 function triggerBurst(rgb){
-  const bc=document.getElementById('burstCanvas');
-  if(!bc)return;
-  bc.width=bc.offsetWidth;bc.height=bc.offsetHeight;
-  const ctx=bc.getContext('2d'),cx=bc.width/2,cy=bc.height/2;
+  const canvasInfo=getCanvasContext('burstCanvas');
+  if(!canvasInfo)return;
+  const {canvas,ctx}=canvasInfo;
+  canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;
+  const cx=canvas.width/2,cy=canvas.height/2;
   const particles=Array.from({length:120},()=>({
     x:cx,y:cy,
     angle:Math.random()*Math.PI*2,
@@ -549,19 +577,25 @@ function triggerBurst(rgb){
   }));
   particles.forEach(p=>{p.vx=Math.cos(p.angle)*p.speed;p.vy=Math.sin(p.angle)*p.speed;});
   let braf;
-  (function blow(){ctx.clearRect(0,0,bc.width,bc.height);
-    let alive=false;
-    particles.forEach(p=>{
-      if(p.life<=0)return; alive=true;
-      p.x+=p.vx;p.y+=p.vy;p.vx*=.95;p.vy*=.95;p.life-=p.decay;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${rgb},${p.life*.9})`;ctx.fill();
-      // glow
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life*3,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${rgb},${p.life*.15})`;ctx.fill();
-    });
-    if(alive)braf=requestAnimationFrame(blow);
-    else ctx.clearRect(0,0,bc.width,bc.height);
+  (function blow(){
+    if(!ctx)return;
+    try{
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      let alive=false;
+      particles.forEach(p=>{
+        if(p.life<=0)return; alive=true;
+        p.x+=p.vx;p.y+=p.vy;p.vx*=.95;p.vy*=.95;p.life-=p.decay;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${rgb},${p.life*.9})`;ctx.fill();
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life*3,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${rgb},${p.life*.15})`;ctx.fill();
+      });
+      if(alive)braf=requestAnimationFrame(blow);
+      else ctx.clearRect(0,0,canvas.width,canvas.height);
+    }catch(err){
+      console.warn('Burst animation failed', err);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
   })();
 }
 
@@ -582,30 +616,77 @@ function triggerHoloPulse(){
 }
 
 function triggerTransitionSweep(rgb){
-  const bc=document.getElementById('burstCanvas');
-  if(!bc)return;
-  bc.width=bc.offsetWidth;bc.height=bc.offsetHeight;
-  const ctx=bc.getContext('2d'),W=bc.width,H=bc.height;
+  const canvasInfo=getCanvasContext('burstCanvas');
+  if(!canvasInfo)return;
+  const {canvas,ctx}=canvasInfo;
+  canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;
+  const W=canvas.width,H=canvas.height;
   let p=0;
   const total=1.25;
   function step(){
-    ctx.clearRect(0,0,W,H);
-    const t=p/total;
-    const x=-220+(W+440)*t;
-    const g=ctx.createLinearGradient(x-180,0,x+180,0);
-    g.addColorStop(0,`rgba(255,255,255,0)`);
-    g.addColorStop(.25,`rgba(${rgb},.06)`);
-    g.addColorStop(.5,`rgba(${rgb},.35)`);
-    g.addColorStop(.75,`rgba(${rgb},.06)`);
-    g.addColorStop(1,`rgba(255,255,255,0)`);
-    ctx.fillStyle=g;
-    ctx.fillRect(Math.max(0,x-180),0,360,H);
-    ctx.globalCompositeOperation='screen';
-    ctx.fillStyle=`rgba(255,255,255,.14)`;
-    ctx.fillRect(Math.max(0,x-120),0,240,H);
-    ctx.globalCompositeOperation='source-over';
-    p+=.024;
-    if(p<total) requestAnimationFrame(step); else ctx.clearRect(0,0,W,H);
+    if(!ctx)return;
+    try{
+      ctx.clearRect(0,0,W,H);
+      const t=p/total;
+      const x=-220+(W+440)*t;
+      const g=ctx.createLinearGradient(x-180,0,x+180,0);
+      g.addColorStop(0,`rgba(255,255,255,0)`);
+      g.addColorStop(.25,`rgba(${rgb},.06)`);
+      g.addColorStop(.5,`rgba(${rgb},.35)`);
+      g.addColorStop(.75,`rgba(${rgb},.06)`);
+      g.addColorStop(1,`rgba(255,255,255,0)`);
+      ctx.fillStyle=g;
+      ctx.fillRect(Math.max(0,x-180),0,360,H);
+      ctx.globalCompositeOperation='screen';
+      ctx.fillStyle=`rgba(255,255,255,.14)`;
+      ctx.fillRect(Math.max(0,x-120),0,240,H);
+      ctx.globalCompositeOperation='source-over';
+      p+=.024;
+      if(p<total) requestAnimationFrame(step); else ctx.clearRect(0,0,W,H);
+    }catch(err){
+      console.warn('Transition sweep failed', err);
+      ctx.clearRect(0,0,W,H);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function triggerGlowBloom(rgb){
+  const canvasInfo=getCanvasContext('burstCanvas');
+  if(!canvasInfo)return;
+  const {canvas,ctx}=canvasInfo;
+  canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;
+  const W=canvas.width,H=canvas.height;
+  const cx=W/2,cy=H/2;
+  const total=1.05;
+  let p=0;
+  function step(){
+    if(!ctx)return;
+    try{
+      ctx.clearRect(0,0,W,H);
+      const t=p/total;
+      const glow=220*(1-t)+40;
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,glow);
+      g.addColorStop(0,`rgba(255,255,255,${0.16*(1-t)})`);
+      g.addColorStop(.3,`rgba(${rgb},${0.18*(1-t)})`);
+      g.addColorStop(1,`rgba(${rgb},0)`);
+      ctx.fillStyle=g;
+      ctx.fillRect(0,0,W,H);
+      for(let i=0;i<6;i++){
+        const radius=40+i*34+t*140;
+        const alpha=Math.max(0,0.24-(t*0.2)+(i*0.015));
+        ctx.beginPath();
+        ctx.arc(cx,cy,radius,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(${rgb},${alpha})`;
+        ctx.lineWidth=1.2+i*0.5;
+        ctx.stroke();
+      }
+      p+=0.025;
+      if(p<total) requestAnimationFrame(step); else ctx.clearRect(0,0,W,H);
+    }catch(err){
+      console.warn('Glow bloom failed', err);
+      ctx.clearRect(0,0,W,H);
+    }
   }
   requestAnimationFrame(step);
 }
@@ -626,9 +707,11 @@ function spawnFromArt(cv,ctx){
 }
 function startFx(ei,rgb){
   stopFx();
-  const cv=document.getElementById('fxCanvas'),ctx=cv.getContext('2d');
-  cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;
-  const W=cv.width,H=cv.height;
+  const canvasInfo=getCanvasContext('fxCanvas');
+  if(!canvasInfo)return;
+  const {canvas,ctx}=canvasInfo;
+  canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;
+  const W=canvas.width,H=canvas.height;
   const focusSeed=Math.abs(hash(`${ei}-${Date.now()}-${Math.random()}`));
   const ACX=50+150+(focusSeed%11-5);
   const ACY=H/2+((Math.floor(focusSeed/11)%11)-5);
@@ -842,17 +925,19 @@ function startFx(ei,rgb){
     const draw=E[idx%E.length]();
     return ()=>{
       if(layer===0){
-        ctx.clearRect(0,0,W,H);
-        draw();
+        try{ctx.clearRect(0,0,W,H);draw();}catch(err){console.warn('FX layer failed',err);}
       } else {
         const prevClear=ctx.clearRect;
         ctx.clearRect=()=>{};
-        draw();
-        ctx.clearRect=prevClear;
+        try{draw();}catch(err){console.warn('FX layer failed',err);}finally{ctx.clearRect=prevClear;}
       }
     };
   });
-  (function loop(){draws.forEach(draw=>draw());fxRAF=requestAnimationFrame(loop);})();
+  if(!draws.length)return;
+  (function loop(){
+    try{draws.forEach(draw=>draw());}catch(err){console.warn('FX loop failed',err);}
+    fxRAF=requestAnimationFrame(loop);
+  })();
 }
 
 /* ══ AUTH ══ */
@@ -907,8 +992,11 @@ function showIdle(){
 
 function showTrack(data){
   const card=G('nowPlayingCard');
+  if(!data||!data.item){showIdle();return;}
   G('idleCard').classList.remove('show');card.classList.add('show');
   const item=data.item,key=item.name+(item.artists[0]||{name:''}).name;
+  const trackTitle=item.name;
+  const artistText=item.artists.map(a=>a.name).join(', ');
   const isNewTrack=item.id!==lastId;
 
   // Handle pause fade
@@ -932,20 +1020,20 @@ function showTrack(data){
       const p=applyPal(key),h=hash(key);
       startFx(h,p.rgb);
       setupBar(h % BARS.length,p);
-      setTimeout(()=>{triggerBurst(p.rgb);triggerShimmer();triggerHoloPulse();triggerTransitionSweep(p.rgb);},300);
-      showToast(item.name, item.artists.map(a=>a.name).join(', ')); // 08: toast
+      setTimeout(()=>{triggerBurst(p.rgb);triggerShimmer();triggerHoloPulse();triggerTransitionSweep(p.rgb);triggerGlowBloom(p.rgb);},300);
+      showToast(trackTitle, artistText); // 08: toast
       // Aura glow (use palette color)
       const aura=G('artAura');
       if(aura){aura.style.background=`radial-gradient(circle,rgba(${p.rgb},0.55) 0%,rgba(${p.rgb},0) 70%)`;aura.style.opacity='1';}
       const img=(item.album&&item.album.images||[])[0];
       G('art').src=img?img.url:'';G('art').alt=item.name;
-      G('trackName').textContent=item.name;
-      G('artistName').textContent=item.artists.map(a=>a.name).join(', ');
-      applyTextEffects(G('trackName'), G('artistName'));
+      applyTextEffects(trackTitle, artistText);
       // Marquee scroll if name overflows
       requestAnimationFrame(()=>{
         const el=G('trackName');
+        if(!el)return;
         const wrap=el.parentElement;
+        if(!wrap)return;
         const overflow=el.scrollWidth-wrap.clientWidth;
         if(overflow>20){
           const dur=Math.max(8,Math.round(overflow/60))+'s';
@@ -973,11 +1061,11 @@ function showTrack(data){
   } else {
     const img=(item.album&&item.album.images||[])[0];
     G('art').src=img?img.url:'';
-    G('trackName').textContent=item.name;
-    G('artistName').textContent=item.artists.map(a=>a.name).join(', ');
-    applyTextEffects(G('trackName'), G('artistName'));
+    applyTextEffects(trackTitle, artistText);
     requestAnimationFrame(()=>{
-      const el=G('trackName'),wrap=el.parentElement;
+      const el=G('trackName');
+      if(!el)return;
+      const wrap=el.parentElement;
       if(!wrap)return;
       const overflow=el.scrollWidth-wrap.clientWidth;
       if(overflow>20){
